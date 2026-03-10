@@ -38,7 +38,7 @@ That means the same real person can message multiple companies and still be repr
 1. Copy environment variables:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 2. Update `DATABASE_URL`.
@@ -52,13 +52,13 @@ npm install
 4. Run migrations:
 
 ```bash
-DOTENV_CONFIG_PATH=.env.local npm run migrate
+npm run migrate
 ```
 
 5. Start the service:
 
 ```bash
-DOTENV_CONFIG_PATH=.env.local npm run dev
+npm run dev
 ```
 
 6. Check health:
