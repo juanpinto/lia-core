@@ -1,9 +1,8 @@
-import express, { type Request, type Response } from "express";
+import { type Request, type Response } from "express";
 import helmet from "helmet";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { randomUUID } from "node:crypto";
 import { logger } from "../config/logger.js";
 import { requestContext } from "../lib/request-context.js";
 import { createLiaCoreMcpServer } from "./createServer.js";
@@ -18,7 +17,6 @@ export function createMcpHttpApp() {
 
   app.disable("x-powered-by");
   app.use(helmet());
-  app.use(express.json({ limit: "1mb" }));
   app.use(requestContext);
 
   app.get("/health", (_req: Request, res: Response) => {

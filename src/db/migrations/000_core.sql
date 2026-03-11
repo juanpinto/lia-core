@@ -39,36 +39,20 @@ on public.channel_accounts using btree (company_id, channel);
 create table if not exists public.customers (
   id uuid primary key default gen_random_uuid(),
   name text null,
-  metadata jsonb null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists public.customer_identities (
-  id uuid primary key default gen_random_uuid(),
-  customer_id uuid not null references public.customers(id) on delete cascade,
   channel text not null,
   platform_user_id text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint customer_identities_channel_check check (
+  constraint customers_channel_platform_unique unique (channel, platform_user_id),
+  constraint customers_channel_check check (
     channel = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
-  ),
-  constraint customer_identities_channel_platform_unique unique (channel, platform_user_id)
+  )
 );
-
-create index if not exists customer_identities_customer_idx
-on public.customer_identities using btree (customer_id);
 
 create table if not exists public.company_customers (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies(id) on delete cascade,
   customer_id uuid not null references public.customers(id) on delete cascade,
-  display_name text null,
-  notes text null,
-  metadata jsonb null,
-  first_seen_at timestamptz not null default now(),
-  last_seen_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint company_customers_company_customer_unique unique (company_id, customer_id)
@@ -278,7 +262,6 @@ where status = 'pending';
 create trigger companies_set_updated_at before update on public.companies for each row execute function public.set_updated_at();
 create trigger channel_accounts_set_updated_at before update on public.channel_accounts for each row execute function public.set_updated_at();
 create trigger customers_set_updated_at before update on public.customers for each row execute function public.set_updated_at();
-create trigger customer_identities_set_updated_at before update on public.customer_identities for each row execute function public.set_updated_at();
 create trigger company_customers_set_updated_at before update on public.company_customers for each row execute function public.set_updated_at();
 create trigger conversations_set_updated_at before update on public.conversations for each row execute function public.set_updated_at();
 create trigger products_set_updated_at before update on public.products for each row execute function public.set_updated_at();

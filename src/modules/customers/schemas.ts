@@ -1,22 +1,19 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const CompanyParamsSchema = z.object({ companyId: z.uuid() });
-export const CustomerParamsSchema = z.object({ companyId: z.uuid(), companyCustomerId: z.uuid() });
+export const CustomerParamsSchema = z.object({
+  companyId: z.uuid(),
+  companyCustomerId: z.uuid(),
+});
 
 export const ResolveCompanyCustomerBodySchema = z.object({
-  channel: z.enum(['whatsapp', 'instagram', 'web', 'manual']),
+  channel: z.enum(["whatsapp", "instagram", "web", "manual"]),
   platformUserId: z.string().trim().min(1),
   customerName: z.string().trim().min(1).max(200).nullable().optional(),
-  displayName: z.string().trim().min(1).max(200).nullable().optional(),
-  customerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  companyCustomerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const CreateCompanyCustomerBodySchema = z.object({
   customerName: z.string().trim().min(1).max(200).nullable().optional(),
-  displayName: z.string().trim().min(1).max(200).nullable().optional(),
-  channel: z.enum(['whatsapp', 'instagram', 'web', 'manual']),
+  channel: z.enum(["whatsapp", "instagram", "web", "manual"]),
   platformUserId: z.string().trim().min(1),
-  customerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  companyCustomerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });

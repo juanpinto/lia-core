@@ -9,24 +9,17 @@ const InputSchema = z.object({
   channel: z.enum(["whatsapp", "instagram", "web", "manual"]),
   platformUserId: z.string().trim().min(1),
   customerName: z.string().trim().min(1).max(200).nullable().optional(),
-  displayName: z.string().trim().min(1).max(200).nullable().optional(),
-  customerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
-  companyCustomerMetadata: z
-    .record(z.string(), z.unknown())
-    .nullable()
-    .optional(),
 });
 
 const OutputSchema = z.object({
   companyCustomer: z.object({
-    id: z.uuid(),
+    companyCustomerId: z.uuid(),
+    id: z.uuid().optional(),
     companyId: z.uuid(),
     customerId: z.uuid(),
-    displayName: z.string().nullable(),
-    notes: z.string().nullable(),
-    metadata: z.record(z.string(), z.unknown()).nullable(),
-    firstSeenAt: z.iso.datetime({ offset: true }),
-    lastSeenAt: z.iso.datetime({ offset: true }),
+    customerName: z.string().nullable(),
+    channel: z.enum(["whatsapp", "instagram", "web", "manual"]),
+    platformUserId: z.string().trim().min(1),
     createdAt: z.iso.datetime({ offset: true }),
     updatedAt: z.iso.datetime({ offset: true }),
   }),
@@ -57,13 +50,15 @@ export function registerResolveCustomerTool(
             channel: args.channel,
             platformUserId: args.platformUserId,
             customerName: args.customerName ?? null,
-            displayName: args.displayName ?? null,
-            customerMetadata: args.customerMetadata ?? null,
-            companyCustomerMetadata: args.companyCustomerMetadata ?? null,
           },
         );
 
-        return ok({ companyCustomer });
+        return ok({
+          companyCustomer: {
+            ...companyCustomer,
+            id: companyCustomer.companyCustomerId,
+          },
+        });
       } catch (error) {
         return toMcpErrorResult(error);
       }
