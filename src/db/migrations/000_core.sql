@@ -21,16 +21,13 @@ create table if not exists public.channel_accounts (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies(id) on delete cascade,
   channel text not null,
-  external_account_id text not null,
-  external_inbox_id text not null,
-  display_name text null,
-  metadata jsonb null,
+  platform_account_id text not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint channel_accounts_channel_check check (
     channel = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
   ),
-  constraint channel_accounts_external_inbox_unique unique (channel, external_inbox_id)
+  constraint channel_accounts_platform_account_unique unique (channel, platform_account_id)
 );
 
 create index if not exists channel_accounts_company_channel_idx
@@ -99,7 +96,6 @@ create table if not exists public.messages (
   direction text not null,
   sender_id text null,
   body text null,
-  raw jsonb null,
   role text null,
   created_at timestamptz not null default now(),
   constraint messages_channel_check check (
@@ -111,7 +107,6 @@ create table if not exists public.messages (
   constraint messages_role_check check (
     role is null or role = any (array['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])
   ),
-  constraint messages_content_check check (body is not null or raw is not null),
   constraint messages_company_channel_external_unique unique (company_id, channel, external_message_id)
 );
 
