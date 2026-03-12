@@ -42,6 +42,14 @@ export interface AppointmentRecord {
   items: AppointmentItemRecord[];
 }
 
+export interface UpcomingAppointmentContextRecord {
+  id: string;
+  status: string;
+  startAtUtc: string;
+  endAtUtc: string;
+  notes: string | null;
+}
+
 function mapAppointmentItem(row: Record<string, unknown>): AppointmentItemRecord {
   return {
     id: String(row.id),
@@ -52,6 +60,18 @@ function mapAppointmentItem(row: Record<string, unknown>): AppointmentItemRecord
     sortOrder: Number(row.sort_order),
     notes: (row.notes as string | null) ?? null,
     metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+  };
+}
+
+function mapUpcomingContextRow(
+  row: Record<string, unknown>,
+): UpcomingAppointmentContextRecord {
+  return {
+    id: String(row.id),
+    status: String(row.status),
+    startAtUtc: new Date(String(row.start_at_utc)).toISOString(),
+    endAtUtc: new Date(String(row.end_at_utc)).toISOString(),
+    notes: (row.notes as string | null) ?? null,
   };
 }
 
@@ -158,6 +178,25 @@ export async function listAppointmentsForCompanyCustomer(companyId: string, comp
     appointments.push(mapAppointment(row, items));
   }
   return appointments;
+}
+
+export async function listUpcomingAppointmentsForCompanyCustomer(
+  companyId: string,
+  companyCustomerId: string,
+  limit = 10,
+): Promise<UpcomingAppointmentContextRecord[]> {
+  const result = await pool.query(
+    `select id, status, start_at_utc, end_at_utc, notes
+     from public.appointments
+     where company_id = $1
+       and company_customer_id = $2
+       and start_at_utc >= now()
+     order by start_at_utc desc
+     limit $3`,
+    [companyId, companyCustomerId, limit],
+  );
+
+  return result.rows.map(mapUpcomingContextRow);
 }
 
 export async function cancelAppointment(companyId: string, appointmentId: string, input: CancelAppointmentInput): Promise<AppointmentRecord> {

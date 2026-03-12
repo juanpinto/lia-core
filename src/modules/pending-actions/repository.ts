@@ -21,6 +21,14 @@ export interface PendingActionRecord {
   updatedAt: string;
 }
 
+export interface ActivePendingActionContextRecord {
+  id: string;
+  actionType: string;
+  payload: Record<string, unknown>;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
 function mapRow(row: Record<string, unknown>): PendingActionRecord {
   return {
     id: String(row.id),
@@ -35,6 +43,16 @@ function mapRow(row: Record<string, unknown>): PendingActionRecord {
     resolvedAt: row.resolved_at ? new Date(String(row.resolved_at)).toISOString() : null,
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
+  };
+}
+
+function mapActiveContextRow(row: Record<string, unknown>): ActivePendingActionContextRecord {
+  return {
+    id: String(row.id),
+    actionType: String(row.action_type),
+    payload: (row.payload as Record<string, unknown>) ?? {},
+    createdAt: new Date(String(row.created_at)).toISOString(),
+    expiresAt: row.expires_at ? new Date(String(row.expires_at)).toISOString() : null,
   };
 }
 
@@ -60,6 +78,24 @@ export async function listPendingActions(companyId: string): Promise<PendingActi
     [companyId],
   );
   return result.rows.map(mapRow);
+}
+
+export async function getActivePendingActionForConversation(
+  companyId: string,
+  conversationId: string,
+): Promise<ActivePendingActionContextRecord | null> {
+  const result = await pool.query(
+    `select id, action_type, payload, created_at, expires_at
+     from public.pending_actions
+     where company_id = $1
+       and conversation_id = $2
+       and status = 'pending'
+     order by created_at desc
+     limit 1`,
+    [companyId, conversationId],
+  );
+
+  return result.rowCount ? mapActiveContextRow(result.rows[0]!) : null;
 }
 
 export async function resolvePendingAction(companyId: string, pendingActionId: string, input: ResolveInput): Promise<PendingActionRecord> {

@@ -21,6 +21,11 @@ export interface CompanyCustomerRecord {
   updatedAt: string;
 }
 
+export interface ResolvedCompanyCustomerIds {
+  customerId: string;
+  companyCustomerId: string;
+}
+
 function mapRow(row: Record<string, unknown>): CompanyCustomerRecord {
   return {
     companyCustomerId: String(row.company_customer_id),
@@ -31,6 +36,38 @@ function mapRow(row: Record<string, unknown>): CompanyCustomerRecord {
     platformUserId: String(row.platform_user_id),
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
+  };
+}
+
+export async function resolveCompanyCustomerIds(
+  client: PoolClient,
+  companyId: string,
+  input: ResolveInput,
+): Promise<ResolvedCompanyCustomerIds> {
+  const customerResult = await client.query(
+    `
+    insert into public.customers (
+      name,
+      channel,
+      platform_user_id
+    )
+    values ($1, $2, $3)
+    on conflict (channel, platform_user_id)
+    do update
+      set name = coalesce(excluded.name, public.customers.name),
+          updated_at = now()
+    returning id
+    `,
+    [input.customerName ?? null, input.channel, input.platformUserId],
+  );
+
+  const customerId = String(customerResult.rows[0]!.id);
+
+  const companyCustomerId = await linkExistingCustomer(client, companyId, customerId);
+
+  return {
+    customerId,
+    companyCustomerId,
   };
 }
 
@@ -85,29 +122,10 @@ export async function resolveCompanyCustomer(
   input: ResolveInput,
 ): Promise<CompanyCustomerRecord> {
   return withTransaction(async (client) => {
-    const customerResult = await client.query(
-      `
-      insert into public.customers (
-        name,
-        channel,
-        platform_user_id
-      )
-      values ($1, $2, $3)
-      on conflict (channel, platform_user_id)
-      do update
-      set name = coalesce(excluded.name, public.customers.name),
-          updated_at = now()
-      returning id
-      `,
-      [input.customerName ?? null, input.channel, input.platformUserId],
-    );
-
-    const customerId = String(customerResult.rows[0]!.id);
-
-    const companyCustomerId = await linkExistingCustomer(
+    const { companyCustomerId } = await resolveCompanyCustomerIds(
       client,
       companyId,
-      customerId,
+      input,
     );
 
     return selectCompanyCustomer(client, companyId, companyCustomerId);

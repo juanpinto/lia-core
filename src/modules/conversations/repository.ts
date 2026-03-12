@@ -1,17 +1,5 @@
 import type { PoolClient } from "pg";
-import { env } from "../../config/env.js";
-import { NotFoundError } from "../../lib/errors.js";
-import { pool, withTransaction } from "../../db/index.js";
-import type { z } from "zod";
-import type {
-  AddMessageBodySchema,
-  CreateConversationBodySchema,
-  IngestInboundMessageBodySchema,
-} from "./schemas.js";
-
-type CreateConversationInput = z.infer<typeof CreateConversationBodySchema>;
-type AddMessageInput = z.infer<typeof AddMessageBodySchema>;
-type IngestInboundMessageInput = z.infer<typeof IngestInboundMessageBodySchema>;
+import { pool } from "../../db/index.js";
 
 export interface ConversationRecord {
   id: string;
@@ -44,12 +32,32 @@ export interface MessageRecord {
   createdAt: string;
 }
 
-export interface IngestInboundMessageResult {
-  customerId: string;
-  companyId: string;
-  companyName: string;
+export interface ConversationContextBaseRecord {
   conversationId: string;
+  companyId: string;
+  companyCustomerId: string;
+  companyName: string;
+  companyTimezone: string;
+  companyPlatformAccountId: string | null;
+  customerId: string;
+  customerName: string | null;
+  customerChannel: "whatsapp" | "instagram" | "web" | "manual";
+  customerPlatformAccountId: string;
+  startedAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationContextMessageRecord {
+  id: string;
+  direction: "inbound" | "outbound";
+  role: "user" | "assistant" | "system" | "tool" | null;
+  body: string | null;
+  createdAt: string;
+}
+
+export interface InboundMessageRecord {
   messageId: string;
+  conversationId: string;
 }
 
 function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
@@ -89,91 +97,97 @@ function mapMessageRow(row: Record<string, unknown>): MessageRecord {
   };
 }
 
-async function getCompanyByPlatformAccountId(
-  client: PoolClient,
-  channel: string,
-  platformAccountId: string,
-): Promise<{
-  id: string;
-  name: string;
-  channelAccountId: string;
-}> {
-  const result = await client.query(
+function mapConversationContextMessageRow(
+  row: Record<string, unknown>,
+): ConversationContextMessageRecord {
+  return {
+    id: String(row.id),
+    direction: row.direction as ConversationContextMessageRecord["direction"],
+    role: (row.role as ConversationContextMessageRecord["role"]) ?? null,
+    body: (row.body as string | null) ?? null,
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  };
+}
+
+export async function getConversationContextBase(
+  companyId: string,
+  conversationId: string,
+): Promise<ConversationContextBaseRecord | null> {
+  const result = await pool.query(
     `
     select
-      c.id as company_id,
-      c.name as company_name,
-      ca.id as channel_account_id
-    from public.channel_accounts ca
-    inner join public.companies c
-      on c.id = ca.company_id
-    where ca.channel = $1
-      and ca.platform_account_id = $2
+      c.id as conversation_id,
+      c.company_id,
+      c.company_customer_id,
+      c.started_at,
+      c.updated_at,
+      co.name as company_name,
+      co.timezone as company_timezone,
+      ca.platform_account_id as company_platform_account_id,
+      cu.id as customer_id,
+      cu.name as customer_name,
+      cu.channel as customer_channel,
+      cu.platform_user_id as customer_platform_account_id
+    from public.conversations c
+    inner join public.companies co
+      on co.id = c.company_id
+    inner join public.company_customers cc
+      on cc.id = c.company_customer_id
+    inner join public.customers cu
+      on cu.id = cc.customer_id
+    left join public.channel_accounts ca
+      on ca.id = c.channel_account_id
+    where c.company_id = $1
+      and c.id = $2
     limit 1
     `,
-    [channel, platformAccountId],
+    [companyId, conversationId],
   );
 
   if (!result.rowCount) {
-    throw new NotFoundError(
-      `Company was not found for channel=${channel} and platformAccountId=${platformAccountId}.`,
-    );
+    return null;
   }
 
+  const row = result.rows[0]!;
   return {
-    id: String(result.rows[0]!.company_id),
-    name: String(result.rows[0]!.company_name),
-    channelAccountId: String(result.rows[0]!.channel_account_id),
+    conversationId: String(row.conversation_id),
+    companyId: String(row.company_id),
+    companyCustomerId: String(row.company_customer_id),
+    companyName: String(row.company_name),
+    companyTimezone: String(row.company_timezone),
+    companyPlatformAccountId:
+      (row.company_platform_account_id as string | null) ?? null,
+    customerId: String(row.customer_id),
+    customerName: (row.customer_name as string | null) ?? null,
+    customerChannel:
+      row.customer_channel as ConversationContextBaseRecord["customerChannel"],
+    customerPlatformAccountId: String(row.customer_platform_account_id),
+    startedAt: new Date(String(row.started_at)).toISOString(),
+    updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
 }
 
-async function resolveCustomerForCompany(
-  client: PoolClient,
+export async function listRecentConversationContextMessages(
   companyId: string,
-  input: {
-    customerName?: string | null;
-    channel: string;
-    platformUserId: string;
-  },
-): Promise<{ customerId: string; companyCustomerId: string }> {
-  const customerResult = await client.query(
+  conversationId: string,
+  limit = 10,
+): Promise<ConversationContextMessageRecord[]> {
+  const result = await pool.query(
     `
-    insert into public.customers (
-      name,
-      channel,
-      platform_user_id
-    )
-    values ($1, $2, $3)
-    on conflict (channel, platform_user_id)
-    do update
-      set name = coalesce(excluded.name, public.customers.name),
-          updated_at = now()
-    returning id
+    select id, direction, role, body, created_at
+    from public.messages
+    where company_id = $1
+      and conversation_id = $2
+    order by created_at desc
+    limit $3
     `,
-    [input.customerName ?? null, input.channel, input.platformUserId],
+    [companyId, conversationId, limit],
   );
 
-  const customerId = String(customerResult.rows[0]!.id);
-
-  const companyCustomerResult = await client.query(
-    `
-    insert into public.company_customers (company_id, customer_id)
-    values ($1, $2)
-    on conflict (company_id, customer_id)
-    do update
-      set updated_at = now()
-    returning id
-    `,
-    [companyId, customerId],
-  );
-
-  return {
-    customerId,
-    companyCustomerId: String(companyCustomerResult.rows[0]!.id),
-  };
+  return result.rows.map(mapConversationContextMessageRow);
 }
 
-async function findReusableConversation(
+export async function findReusableConversation(
   client: PoolClient,
   companyId: string,
   companyCustomerId: string,
@@ -203,7 +217,7 @@ async function findReusableConversation(
   return result.rowCount ? String(result.rows[0]!.id) : null;
 }
 
-async function createConversation(
+export async function createConversationForInbound(
   client: PoolClient,
   companyId: string,
   input: {
@@ -237,7 +251,7 @@ async function getExistingMessageByExternalId(
   companyId: string,
   channel: string,
   externalMessageId: string,
-): Promise<{ messageId: string; conversationId: string }> {
+): Promise<InboundMessageRecord> {
   const result = await client.query(
     `
     select id, conversation_id
@@ -256,7 +270,7 @@ async function getExistingMessageByExternalId(
   };
 }
 
-async function insertInboundMessage(
+export async function insertInboundMessage(
   client: PoolClient,
   companyId: string,
   conversationId: string,
@@ -267,7 +281,7 @@ async function insertInboundMessage(
     senderId: string | null;
     body?: string | null;
   },
-): Promise<{ messageId: string; conversationId: string }> {
+): Promise<InboundMessageRecord> {
   const inserted = await client.query(
     `
     insert into public.messages
@@ -316,63 +330,4 @@ async function insertInboundMessage(
     input.channel,
     input.externalMessageId,
   );
-}
-
-export async function ingestInboundMessage(
-  input: IngestInboundMessageInput,
-): Promise<IngestInboundMessageResult> {
-  return withTransaction(async (client) => {
-    const company = await getCompanyByPlatformAccountId(
-      client,
-      input.channel,
-      input.companyPlatformId,
-    );
-
-    const { customerId, companyCustomerId } = await resolveCustomerForCompany(
-      client,
-      company.id,
-      {
-        customerName: input.customerName ?? null,
-        channel: input.channel,
-        platformUserId: input.customerPlatformId,
-      },
-    );
-
-    let conversationId = await findReusableConversation(
-      client,
-      company.id,
-      companyCustomerId,
-      input.channel,
-      company.channelAccountId,
-    );
-
-    if (!conversationId) {
-      conversationId = await createConversation(client, company.id, {
-        companyCustomerId,
-        channel: input.channel,
-        channelAccountId: company.channelAccountId,
-      });
-    }
-
-    const message = await insertInboundMessage(
-      client,
-      company.id,
-      conversationId,
-      {
-        channel: input.channel,
-        channelAccountId: company.channelAccountId,
-        externalMessageId: input.externalMessageId,
-        senderId: input.customerPlatformId,
-        body: input.body,
-      },
-    );
-
-    return {
-      customerId,
-      companyId: company.id,
-      companyName: company.name,
-      conversationId: message.conversationId,
-      messageId: message.messageId,
-    };
-  });
 }

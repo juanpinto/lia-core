@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { pool } from "../../db/index.js";
 import type { CreateChannelAccountBody } from "./schemas.js";
 
@@ -10,6 +11,12 @@ export interface ChannelAccountRecord {
   updatedAt: string;
 }
 
+export interface CompanyByPlatformAccountRecord {
+  id: string;
+  name: string;
+  channelAccountId: string;
+}
+
 function mapRow(row: Record<string, unknown>): ChannelAccountRecord {
   return {
     id: String(row.id),
@@ -18,6 +25,38 @@ function mapRow(row: Record<string, unknown>): ChannelAccountRecord {
     externalAccountId: String(row.platform_account_id),
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
+  };
+}
+
+export async function findCompanyByPlatformAccountId(
+  client: PoolClient,
+  channel: ChannelAccountRecord["channel"],
+  platformAccountId: string,
+): Promise<CompanyByPlatformAccountRecord | null> {
+  const result = await client.query(
+    `
+    select
+      c.id as company_id,
+      c.name as company_name,
+      ca.id as channel_account_id
+    from public.channel_accounts ca
+    inner join public.companies c
+      on c.id = ca.company_id
+    where ca.channel = $1
+      and ca.platform_account_id = $2
+    limit 1
+    `,
+    [channel, platformAccountId],
+  );
+
+  if (!result.rowCount) {
+    return null;
+  }
+
+  return {
+    id: String(result.rows[0]!.company_id),
+    name: String(result.rows[0]!.company_name),
+    channelAccountId: String(result.rows[0]!.channel_account_id),
   };
 }
 
@@ -39,7 +78,7 @@ export async function listChannelAccounts(
   companyId: string,
 ): Promise<ChannelAccountRecord[]> {
   const result = await pool.query(
-    `select id, company_id, channel, external_account_id, external_inbox_id, display_name, metadata, created_at, updated_at
+    `select id, company_id, channel, platform_account_id, created_at, updated_at
      from public.channel_accounts
      where company_id = $1
      order by created_at asc`,

@@ -1,5 +1,6 @@
 import { resolveCompanyCustomerService } from "../modules/customers/service.js";
 import { searchCompanyProducts } from "../modules/products/service.js";
+import { getConversationContextForBrain } from "../modules/conversations/service.js";
 import {
   cancelAppointmentService,
   createAppointmentService,
@@ -13,6 +14,9 @@ export type McpContext = {
   };
   products: {
     searchCompanyProducts: typeof searchCompanyProducts;
+  };
+  conversations: {
+    getConversationContext: typeof getConversationContextForBrain;
   };
   appointments: {
     createAppointment: typeof createAppointmentService;
@@ -29,6 +33,9 @@ export function createMcpContext(): McpContext {
     },
     products: {
       searchCompanyProducts,
+    },
+    conversations: {
+      getConversationContext: getConversationContextForBrain,
     },
     appointments: {
       createAppointment: createAppointmentService,
