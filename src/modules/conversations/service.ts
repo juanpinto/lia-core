@@ -107,13 +107,18 @@ export async function ingestInboundConversationMessage(
       });
     }
 
-    const message = await insertInboundMessage(client, company.id, conversationId, {
-      channel: input.channel,
-      channelAccountId: company.channelAccountId,
-      externalMessageId: input.externalMessageId,
-      senderId: input.customerPlatformId,
-      body: input.body,
-    });
+    const message = await insertInboundMessage(
+      client,
+      company.id,
+      conversationId,
+      {
+        channel: input.channel,
+        channelAccountId: company.channelAccountId,
+        externalMessageId: input.externalMessageId,
+        senderId: input.customerPlatformId,
+        body: input.body,
+      },
+    );
 
     return {
       customerId,
@@ -125,7 +130,7 @@ export async function ingestInboundConversationMessage(
   });
 }
 
-export async function getConversationContextForBrain(
+export async function getConversationContext(
   companyId: string,
   conversationId: string,
 ): Promise<ConversationContextForBrain> {
