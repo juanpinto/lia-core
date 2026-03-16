@@ -1,9 +1,17 @@
 import { pool } from '../../db/index.js';
 import { NotFoundError } from '../../lib/errors.js';
 import type { z } from 'zod';
-import type { CreatePendingActionBodySchema, ResolvePendingActionBodySchema } from './schemas.js';
+import type { ResolvePendingActionBodySchema } from './schemas.js';
 
-type CreateInput = z.infer<typeof CreatePendingActionBodySchema>;
+export interface CreatePendingActionInput {
+  conversationId: string;
+  companyCustomerId: string;
+  channel: string;
+  actionType: string;
+  payload: Record<string, unknown>;
+  expiresAt?: string | null | undefined;
+}
+
 type ResolveInput = z.infer<typeof ResolvePendingActionBodySchema>;
 
 export interface PendingActionRecord {
@@ -56,7 +64,7 @@ function mapActiveContextRow(row: Record<string, unknown>): ActivePendingActionC
   };
 }
 
-export async function insertPendingAction(companyId: string, input: CreateInput): Promise<PendingActionRecord> {
+export async function insertPendingAction(companyId: string, input: CreatePendingActionInput): Promise<PendingActionRecord> {
   const result = await pool.query(
     `insert into public.pending_actions
       (company_id, conversation_id, company_customer_id, channel, action_type, payload, expires_at)

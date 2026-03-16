@@ -7,7 +7,9 @@ import {
   listAppointmentsForCompanyCustomer,
   rescheduleAppointment,
 } from "./repository.js";
+import { getConversation } from "../conversations/repository.js";
 import { getCompanyCustomerIdForCustomerOrThrow } from "../customers/service.js";
+import { assertCompanyProductsExist } from "../products/service.js";
 import type {
   CreateAppointmentForCustomerInput,
   RescheduleAppointmentServiceInput,
@@ -32,6 +34,25 @@ export async function createAppointmentForCustomerService(
   const companyCustomerId = await getCompanyCustomerIdForCustomerOrThrow(
     companyId,
     input.customerId,
+  );
+
+  if (input.conversationId) {
+    const conversation = await getConversation(companyId, input.conversationId);
+    if (!conversation) {
+      throw new NotFoundError(
+        `Conversation ${input.conversationId} was not found for company ${companyId}.`,
+      );
+    }
+    if (conversation.companyCustomerId !== companyCustomerId) {
+      throw new ValidationError(
+        `Conversation ${input.conversationId} does not belong to customer ${input.customerId} for company ${companyId}.`,
+      );
+    }
+  }
+
+  await assertCompanyProductsExist(
+    companyId,
+    input.items.map((item) => item.productId),
   );
 
   return createAppointment(companyId, {

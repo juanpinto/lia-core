@@ -161,6 +161,24 @@ export async function getConversationContextBase(
   };
 }
 
+export async function getConversation(
+  companyId: string,
+  conversationId: string,
+): Promise<ConversationRecord | null> {
+  const result = await pool.query(
+    `
+    select *
+    from public.conversations
+    where company_id = $1
+      and id = $2
+    limit 1
+    `,
+    [companyId, conversationId],
+  );
+
+  return result.rowCount ? mapConversationRow(result.rows[0]!) : null;
+}
+
 export async function listRecentConversationContextMessages(
   companyId: string,
   conversationId: string,

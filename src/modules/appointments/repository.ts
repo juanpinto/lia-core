@@ -82,15 +82,16 @@ function mapAppointment(
 
 async function insertItems(
   client: PoolClient,
+  companyId: string,
   appointmentId: string,
   items: AppointmentItemInput[],
 ): Promise<void> {
   for (const item of items) {
     await client.query(
       `insert into public.appointment_products
-        (appointment_id, product_id, quantity, notes)
-       values ($1, $2, $3, $4)`,
-      [appointmentId, item.productId, item.quantity, item.notes ?? null],
+        (company_id, appointment_id, product_id, quantity, notes)
+       values ($1, $2, $3, $4, $5)`,
+      [companyId, appointmentId, item.productId, item.quantity, item.notes ?? null],
     );
   }
 }
@@ -132,7 +133,7 @@ export async function createAppointment(
 
     const row = appointmentResult.rows[0]!;
     const appointmentId = String(row.id);
-    await insertItems(client, appointmentId, input.items);
+    await insertItems(client, companyId, appointmentId, input.items);
     const items = await getItems(client, appointmentId);
     return mapAppointment(row, items);
   });

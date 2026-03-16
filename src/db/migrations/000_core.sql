@@ -27,7 +27,8 @@ create table if not exists public.channel_accounts (
   constraint channel_accounts_channel_check check (
     channel = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
   ),
-  constraint channel_accounts_platform_account_unique unique (channel, platform_account_id)
+  constraint channel_accounts_platform_account_unique unique (channel, platform_account_id),
+  constraint channel_accounts_company_id_id_unique unique (company_id, id)
 );
 
 create index if not exists channel_accounts_company_channel_idx
@@ -52,7 +53,8 @@ create table if not exists public.company_customers (
   customer_id uuid not null references public.customers(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint company_customers_company_customer_unique unique (company_id, customer_id)
+  constraint company_customers_company_customer_unique unique (company_id, customer_id),
+  constraint company_customers_company_id_id_unique unique (company_id, id)
 );
 
 create index if not exists company_customers_customer_idx
@@ -75,7 +77,12 @@ create table if not exists public.conversations (
   ),
   constraint conversations_status_check check (
     status = any (array['open'::text, 'closed'::text])
-  )
+  ),
+  constraint conversations_company_id_id_unique unique (company_id, id),
+  constraint conversations_company_customer_company_fk foreign key (company_id, company_customer_id)
+    references public.company_customers(company_id, id) on delete cascade,
+  constraint conversations_channel_account_company_fk foreign key (company_id, channel_account_id)
+    references public.channel_accounts(company_id, id)
 );
 
 create index if not exists conversations_company_customer_idx
@@ -105,7 +112,11 @@ create table if not exists public.messages (
   constraint messages_role_check check (
     role is null or role = any (array['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])
   ),
-  constraint messages_company_channel_external_unique unique (company_id, channel, external_message_id)
+  constraint messages_company_channel_external_unique unique (company_id, channel, external_message_id),
+  constraint messages_conversation_company_fk foreign key (company_id, conversation_id)
+    references public.conversations(company_id, id) on delete cascade,
+  constraint messages_channel_account_company_fk foreign key (company_id, channel_account_id)
+    references public.channel_accounts(company_id, id)
 );
 
 create index if not exists messages_conversation_created_idx
@@ -120,7 +131,8 @@ create table if not exists public.products (
   price integer null check (price is null or price >= 0),
   duration_minutes integer null check (duration_minutes is null or duration_minutes >= 0),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint products_company_id_id_unique unique (company_id, id)
 );
 
 create index if not exists products_company_active_name_idx
@@ -144,7 +156,12 @@ create table if not exists public.appointments (
   constraint appointments_created_via_check check (
     created_via = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
   ),
-  constraint appointments_time_range_check check (end_at_utc > start_at_utc)
+  constraint appointments_time_range_check check (end_at_utc > start_at_utc),
+  constraint appointments_company_id_id_unique unique (company_id, id),
+  constraint appointments_company_customer_company_fk foreign key (company_id, company_customer_id)
+    references public.company_customers(company_id, id) on delete cascade,
+  constraint appointments_conversation_company_fk foreign key (company_id, conversation_id)
+    references public.conversations(company_id, id)
 );
 
 create index if not exists appointments_company_start_idx
@@ -155,12 +172,17 @@ on public.appointments using btree (company_id, company_customer_id, status, sta
 
 create table if not exists public.appointment_products (
   id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.companies(id) on delete cascade,
   appointment_id uuid not null references public.appointments(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete restrict,
   quantity integer not null default 1 check (quantity > 0),
   notes text null,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint appointment_products_appointment_company_fk foreign key (company_id, appointment_id)
+    references public.appointments(company_id, id) on delete cascade,
+  constraint appointment_products_product_company_fk foreign key (company_id, product_id)
+    references public.products(company_id, id) on delete restrict
 );
 
 create index if not exists appointment_products_appointment_idx
@@ -194,7 +216,11 @@ create table if not exists public.executed_actions (
   constraint executed_actions_status_check check (
     status = any (array['ok'::text, 'failed'::text])
   ),
-  constraint executed_actions_pkey primary key (company_id, action_id)
+  constraint executed_actions_pkey primary key (company_id, action_id),
+  constraint executed_actions_conversation_company_fk foreign key (company_id, conversation_id)
+    references public.conversations(company_id, id),
+  constraint executed_actions_company_customer_company_fk foreign key (company_id, company_customer_id)
+    references public.company_customers(company_id, id)
 );
 
 create index if not exists executed_actions_conversation_idx
@@ -225,7 +251,11 @@ create table if not exists public.pending_actions (
   constraint pending_actions_resolved_consistency_check check (
     (status = 'pending' and resolved_at is null) or
     (status <> 'pending' and resolved_at is not null)
-  )
+  ),
+  constraint pending_actions_conversation_company_fk foreign key (company_id, conversation_id)
+    references public.conversations(company_id, id) on delete cascade,
+  constraint pending_actions_company_customer_company_fk foreign key (company_id, company_customer_id)
+    references public.company_customers(company_id, id) on delete cascade
 );
 
 create index if not exists pending_actions_conversation_status_idx

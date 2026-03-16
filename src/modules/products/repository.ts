@@ -81,3 +81,22 @@ export async function searchProducts(companyId: string, query: string): Promise<
   );
   return result.rows.map(mapRow);
 }
+
+export async function listExistingProductIds(
+  companyId: string,
+  productIds: string[],
+): Promise<string[]> {
+  if (!productIds.length) {
+    return [];
+  }
+
+  const result = await pool.query<{ id: string }>(
+    `select id
+     from public.products
+     where company_id = $1
+       and id = any($2::uuid[])`,
+    [companyId, productIds],
+  );
+
+  return result.rows.map((row) => String(row.id));
+}
