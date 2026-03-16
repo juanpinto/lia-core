@@ -56,6 +56,18 @@ export async function listProducts(companyId: string): Promise<ProductRecord[]> 
   return result.rows.map(mapRow);
 }
 
+export async function listActiveProducts(companyId: string): Promise<ProductRecord[]> {
+  const result = await pool.query(
+    `select id, company_id, name, description, active, price, duration_minutes, created_at, updated_at
+     from public.products
+     where company_id = $1
+       and active = true
+     order by name asc`,
+    [companyId],
+  );
+  return result.rows.map(mapRow);
+}
+
 export async function searchProducts(companyId: string, query: string): Promise<ProductRecord[]> {
   const result = await pool.query(
     `select id, company_id, name, description, active, price, duration_minutes, created_at, updated_at

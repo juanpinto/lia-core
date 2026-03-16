@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createMcpContext } from "./context.js";
+import { registerListProductsTool } from "./tools/products/list.js";
 import { registerResolveCustomerTool } from "./tools/customers/resolve.js";
 import { registerSearchProductsTool } from "./tools/products/search.js";
 import { registerListAppointmentsTool } from "./tools/appointments/list.js";
@@ -24,6 +25,7 @@ export function createLiaCoreMcpServer(): McpServer {
   const ctx = createMcpContext();
 
   registerResolveCustomerTool(server, ctx);
+  registerListProductsTool(server, ctx);
   registerSearchProductsTool(server, ctx);
   registerConversationContextTool(server, ctx);
   registerListAppointmentsTool(server, ctx);
