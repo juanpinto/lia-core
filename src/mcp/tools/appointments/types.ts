@@ -3,22 +3,20 @@ import { z } from "zod";
 export const AppointmentItemInputSchema = z.object({
   productId: z.uuid(),
   quantity: z.number().int().positive().default(1),
-  unitPriceCents: z.number().int().min(0).nullable().optional(),
+  unitPrice: z.number().int().min(0).nullable().optional(),
   durationMinutes: z.number().int().min(0).nullable().optional(),
   sortOrder: z.number().int().min(0).default(0),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const AppointmentItemSchema = z.object({
   id: z.uuid(),
   productId: z.uuid(),
   quantity: z.number().int(),
-  unitPriceCents: z.number().int().nullable(),
+  unitPrice: z.number().int().nullable(),
   durationMinutes: z.number().int().nullable(),
   sortOrder: z.number().int(),
   notes: z.string().nullable(),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
 });
 
 export const AppointmentSchema = z.object({

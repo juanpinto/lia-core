@@ -13,11 +13,10 @@ export const CompanyCustomerAppointmentsParamsSchema = z.object({
 const AppointmentProductInputSchema = z.object({
   productId: z.uuid(),
   quantity: z.number().int().positive().default(1),
-  unitPriceCents: z.number().int().min(0).nullable().optional(),
+  unitPrice: z.number().int().min(0).nullable().optional(),
   durationMinutes: z.number().int().min(0).nullable().optional(),
   sortOrder: z.number().int().min(0).default(0),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const CreateAppointmentBodySchema = z.object({

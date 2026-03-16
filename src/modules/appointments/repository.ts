@@ -19,11 +19,10 @@ export interface AppointmentItemRecord {
   id: string;
   productId: string;
   quantity: number;
-  unitPriceCents: number | null;
+  unitPrice: number | null;
   durationMinutes: number | null;
   sortOrder: number;
   notes: string | null;
-  metadata: Record<string, unknown> | null;
 }
 
 export interface AppointmentRecord {
@@ -63,11 +62,10 @@ function mapAppointmentItem(
     id: String(row.id),
     productId: String(row.product_id),
     quantity: Number(row.quantity),
-    unitPriceCents: (row.unit_price_cents as number | null) ?? null,
+    unitPrice: (row.unit_price as number | null) ?? null,
     durationMinutes: (row.duration_minutes as number | null) ?? null,
     sortOrder: Number(row.sort_order),
     notes: (row.notes as string | null) ?? null,
-    metadata: (row.metadata as Record<string, unknown> | null) ?? null,
   };
 }
 
@@ -122,17 +120,16 @@ async function insertItems(
   for (const item of items) {
     await client.query(
       `insert into public.appointment_products
-        (appointment_id, product_id, quantity, unit_price_cents, duration_minutes, sort_order, notes, metadata)
-       values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        (appointment_id, product_id, quantity, unit_price, duration_minutes, sort_order, notes)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
       [
         appointmentId,
         item.productId,
         item.quantity,
-        item.unitPriceCents ?? null,
+        item.unitPrice ?? null,
         item.durationMinutes ?? null,
         item.sortOrder,
         item.notes ?? null,
-        item.metadata ?? null,
       ],
     );
   }
@@ -143,7 +140,7 @@ async function getItems(
   appointmentId: string,
 ): Promise<AppointmentItemRecord[]> {
   const result = await client.query(
-    `select id, product_id, quantity, unit_price_cents, duration_minutes, sort_order, notes, metadata
+    `select id, product_id, quantity, unit_price, duration_minutes, sort_order, notes
      from public.appointment_products
      where appointment_id = $1
      order by sort_order asc, created_at asc`,
