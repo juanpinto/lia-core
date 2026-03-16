@@ -45,7 +45,6 @@ export function registerCreateAppointmentTool(
             customerId: args.customerId,
             conversationId: args.conversationId ?? null,
             startAtUtc: args.startAtUtc,
-            endAtUtc: "",
             createdVia: args.channel,
             items: args.items,
           },

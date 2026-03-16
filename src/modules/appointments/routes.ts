@@ -13,7 +13,6 @@ import {
   CancelAppointmentBodySchema,
   CompanyCustomerAppointmentsParamsSchema,
   CompanyParamsSchema,
-  CreateAppointmentBodySchema,
   RescheduleAppointmentBodySchema,
 } from "./schemas.js";
 
@@ -50,14 +49,13 @@ appointmentsRouter.get(
 appointmentsRouter.post(
   "/:appointmentId/cancel",
   asyncHandler(async (req, res) => {
-    const { params, body } = validateRequest(req, {
+    const { params } = validateRequest(req, {
       params: AppointmentParamsSchema,
       body: CancelAppointmentBodySchema,
     });
     const appointment = await cancelAppointmentService(
       params.companyId,
       params.appointmentId,
-      body,
     );
     ok(res, appointment);
   }),

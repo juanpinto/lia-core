@@ -9,7 +9,6 @@ const InputSchema = z.object({
   companyId: z.uuid(),
   appointmentId: z.uuid(),
   startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
   createdVia: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("manual"),
@@ -26,7 +25,8 @@ export function registerRescheduleAppointmentTool(
     "appointments_reschedule",
     {
       title: "Reschedule Appointment",
-      description: "Reschedule an appointment by updating the existing record.",
+      description:
+        "Reschedule an appointment by updating its start time and preserving its current duration unless a new end time is provided elsewhere.",
       inputSchema: InputSchema,
       outputSchema: OutputSchema,
       annotations: {
@@ -41,7 +41,6 @@ export function registerRescheduleAppointmentTool(
           args.appointmentId,
           {
             startAtUtc: args.startAtUtc,
-            endAtUtc: args.endAtUtc,
             createdVia: args.createdVia,
             notes: args.notes ?? null,
           },

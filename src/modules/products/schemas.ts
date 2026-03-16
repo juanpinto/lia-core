@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const CompanyParamsSchema = z.object({ companyId: z.uuid() });
-export const ProductSearchQuerySchema = z.object({ q: z.string().trim().min(1).optional() });
+export const ProductSearchQuerySchema = z.object({ q: z.string().trim().min(1) });
 
 export const CreateProductBodySchema = z.object({
   name: z.string().trim().min(1).max(200),

@@ -16,14 +16,6 @@ export const PendingActionSchema = z.object({
   expiresAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
-export const RecentAppointmentSchema = z.object({
-  id: z.uuid(),
-  status: z.string(),
-  startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
-  notes: z.string().nullable(),
-});
-
 export const InputSchema = z.object({
   companyId: z.uuid(),
   conversationId: z.uuid(),

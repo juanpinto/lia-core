@@ -8,35 +8,35 @@ import {
   rescheduleAppointment,
 } from "./repository.js";
 import { getCompanyCustomerIdForCustomerOrThrow } from "../customers/service.js";
-import type { z } from "zod";
 import type {
-  CancelAppointmentBodySchema,
-  RescheduleAppointmentBodySchema,
-  CreateCustomerAppointmentInput,
-} from "./schemas.js";
+  CreateAppointmentForCustomerInput,
+  RescheduleAppointmentServiceInput,
+} from "./types.js";
 
-type CancelAppointmentInput = z.infer<typeof CancelAppointmentBodySchema>;
-type RescheduleAppointmentInput = z.infer<
-  typeof RescheduleAppointmentBodySchema
->;
+const DEFAULT_APPOINTMENT_DURATION_MS = 60 * 60 * 1000;
+
+function parseDateOrThrow(value: string, fieldName: string): Date {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new ValidationError(`Invalid ${fieldName} value: ${value}.`);
+  }
+  return date;
+}
 
 export async function createAppointmentForCustomerService(
   companyId: string,
-  input: CreateCustomerAppointmentInput,
+  input: CreateAppointmentForCustomerInput,
 ) {
-  const startAt = new Date(input.startAtUtc);
-  if (Number.isNaN(startAt.getTime())) {
-    throw new ValidationError(`Invalid startAtUtc value: ${input.startAtUtc}.`);
-  }
+  const startAt = parseDateOrThrow(input.startAtUtc, "startAtUtc");
 
   const companyCustomerId = await getCompanyCustomerIdForCustomerOrThrow(
     companyId,
     input.customerId,
   );
 
-  return createAppointment(companyId, companyCustomerId, {
-    customerId: input.customerId,
-    conversationId: input.conversationId,
+  return createAppointment(companyId, {
+    companyCustomerId,
+    conversationId: input.conversationId ?? null,
     startAtUtc: startAt.toISOString(),
     endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
     createdVia: input.createdVia,
@@ -79,7 +79,14 @@ export async function cancelAppointmentService(
 export async function rescheduleAppointmentService(
   companyId: string,
   appointmentId: string,
-  input: RescheduleAppointmentInput,
+  input: RescheduleAppointmentServiceInput,
 ) {
-  return rescheduleAppointment(companyId, appointmentId, input);
+  const startAt = parseDateOrThrow(input.startAtUtc, "startAtUtc");
+
+  return rescheduleAppointment(companyId, appointmentId, {
+    startAtUtc: startAt.toISOString(),
+    endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
+    createdVia: input.createdVia,
+    notes: input.notes ?? null,
+  });
 }

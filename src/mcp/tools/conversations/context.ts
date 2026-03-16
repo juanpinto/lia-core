@@ -13,7 +13,7 @@ export function registerConversationContextTool(
     {
       title: "Get Conversation Context",
       description:
-        "Get the initial conversation context, including recent messages, pending action, and upcoming appointments.",
+        "Get the initial conversation context, including recent messages and pending action.",
       inputSchema: InputSchema,
       outputSchema: OutputSchema,
       annotations: {

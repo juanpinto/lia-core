@@ -1,6 +1,5 @@
 import { NotFoundError } from "../../lib/errors.js";
 import { withTransaction } from "../../db/index.js";
-import { listUpcomingAppointmentsForCompanyCustomer } from "../appointments/repository.js";
 import { findCompanyByPlatformAccountId } from "../channel-accounts/repository.js";
 import { resolveCompanyCustomerIds } from "../customers/repository.js";
 import { getActivePendingActionForConversation } from "../pending-actions/repository.js";

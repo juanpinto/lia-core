@@ -1,19 +1,11 @@
 import type { PoolClient } from "pg";
 import { pool, withTransaction } from "../../db/index.js";
 import { NotFoundError } from "../../lib/errors.js";
-import type { z } from "zod";
 import type {
-  CancelAppointmentBodySchema,
-  CreateAppointmentBodySchema,
-  RescheduleAppointmentBodySchema,
-  CreateCustomerAppointmentInput,
-} from "./schemas.js";
-
-type CreateAppointmentInput = z.infer<typeof CreateAppointmentBodySchema>;
-type CancelAppointmentInput = z.infer<typeof CancelAppointmentBodySchema>;
-type RescheduleAppointmentInput = z.infer<
-  typeof RescheduleAppointmentBodySchema
->;
+  AppointmentItemInput,
+  CreateAppointmentRepositoryInput,
+  RescheduleAppointmentRepositoryInput,
+} from "./types.js";
 
 export interface AppointmentItemRecord {
   id: string;
@@ -35,13 +27,6 @@ export interface AppointmentRecord {
   createdAt: string;
   updatedAt: string;
   items: AppointmentItemRecord[];
-}
-
-export interface CustomerAppointmentRecord {
-  id: string;
-  startAtUtc: string;
-  endAtUtc: string;
-  status: "scheduled" | "cancelled" | "completed" | "no_show";
 }
 
 export interface UpcomingAppointmentContextRecord {
@@ -95,21 +80,10 @@ function mapAppointment(
   };
 }
 
-function mapCustomerAppointment(
-  row: Record<string, unknown>,
-): CustomerAppointmentRecord {
-  return {
-    id: String(row.id),
-    startAtUtc: new Date(String(row.start_at_utc)).toISOString(),
-    endAtUtc: new Date(String(row.end_at_utc)).toISOString(),
-    status: row.status as AppointmentRecord["status"],
-  };
-}
-
 async function insertItems(
   client: PoolClient,
   appointmentId: string,
-  items: CreateAppointmentInput["items"],
+  items: AppointmentItemInput[],
 ): Promise<void> {
   for (const item of items) {
     await client.query(
@@ -137,37 +111,7 @@ async function getItems(
 
 export async function createAppointment(
   companyId: string,
-  customerCompanyId: string,
-  input: CreateCustomerAppointmentInput,
-): Promise<AppointmentRecord> {
-  return withTransaction(async (client) => {
-    const appointmentResult = await client.query(
-      `insert into public.appointments
-        (company_id, company_customer_id, conversation_id, start_at_utc, end_at_utc, created_via, notes)
-       values ($1, $2, $3, $4, $5, $6, $7)
-       returning *`,
-      [
-        companyId,
-        customerCompanyId,
-        input.conversationId ?? null,
-        input.startAtUtc,
-        input.endAtUtc,
-        input.createdVia,
-        input.notes ?? null,
-      ],
-    );
-
-    const row = appointmentResult.rows[0]!;
-    const appointmentId = String(row.id);
-    await insertItems(client, appointmentId, input.items);
-    const items = await getItems(client, appointmentId);
-    return mapAppointment(row, items);
-  });
-}
-
-export async function createCustomerAppointment(
-  companyId: string,
-  input: CreateAppointmentInput,
+  input: CreateAppointmentRepositoryInput,
 ): Promise<AppointmentRecord> {
   return withTransaction(async (client) => {
     const appointmentResult = await client.query(
@@ -178,7 +122,7 @@ export async function createCustomerAppointment(
       [
         companyId,
         input.companyCustomerId,
-        input.conversationId ?? null,
+        input.conversationId,
         input.startAtUtc,
         input.endAtUtc,
         input.createdVia,
@@ -292,7 +236,7 @@ export async function cancelAppointment(
 export async function rescheduleAppointment(
   companyId: string,
   appointmentId: string,
-  input: RescheduleAppointmentInput,
+  input: RescheduleAppointmentRepositoryInput,
 ): Promise<AppointmentRecord> {
   const result = await pool.query(
     `update public.appointments
