@@ -23,7 +23,7 @@ export function registerRescheduleAppointmentTool(
   ctx: McpContext,
 ): void {
   server.registerTool(
-    "appointments.reschedule",
+    "appointments_reschedule",
     {
       title: "Reschedule Appointment",
       description: "Reschedule an appointment by updating the existing record.",

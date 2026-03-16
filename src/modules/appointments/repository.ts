@@ -116,12 +116,7 @@ async function insertItems(
       `insert into public.appointment_products
         (appointment_id, product_id, quantity, notes)
        values ($1, $2, $3, $4)`,
-      [
-        appointmentId,
-        item.productId,
-        item.quantity,
-        item.notes ?? null,
-      ],
+      [appointmentId, item.productId, item.quantity, item.notes ?? null],
     );
   }
 }
@@ -277,14 +272,13 @@ export async function listUpcomingAppointmentsForCompanyCustomer(
 export async function cancelAppointment(
   companyId: string,
   appointmentId: string,
-  input: CancelAppointmentInput,
 ): Promise<AppointmentRecord> {
   const result = await pool.query(
     `update public.appointments
-     set status = 'cancelled', notes = coalesce($3, notes)
+     set status = 'cancelled'
      where company_id = $1 and id = $2 and status = 'scheduled'
      returning *`,
-    [companyId, appointmentId, input.reason ?? null],
+    [companyId, appointmentId],
   );
   if (!result.rowCount) {
     throw new NotFoundError(

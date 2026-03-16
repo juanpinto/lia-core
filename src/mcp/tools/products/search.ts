@@ -18,7 +18,7 @@ const ProductSchema = z.object({
 
 const InputSchema = z.object({
   companyId: z.uuid(),
-  query: z.string().trim().min(1).optional(),
+  query: z.string().trim().min(1),
 });
 
 const OutputSchema = z.object({
@@ -30,10 +30,10 @@ export function registerSearchProductsTool(
   ctx: McpContext,
 ): void {
   server.registerTool(
-    "products.search",
+    "products_search",
     {
       title: "Search Products",
-      description: "Search or list products/services for a company.",
+      description: "Search a product/service for a company.",
       inputSchema: InputSchema,
       outputSchema: OutputSchema,
       annotations: {
@@ -43,7 +43,7 @@ export function registerSearchProductsTool(
     },
     async (args) => {
       try {
-        const products = await ctx.products.searchCompanyProducts(
+        const products = await ctx.products.searchCompanyProduct(
           args.companyId,
           args.query,
         );

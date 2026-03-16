@@ -8,7 +8,6 @@ import { AppointmentOutputSchema } from "./types.js";
 const InputSchema = z.object({
   companyId: z.uuid(),
   appointmentId: z.uuid(),
-  reason: z.string().trim().min(1).nullable().optional(),
 });
 
 const OutputSchema = AppointmentOutputSchema;
@@ -18,7 +17,7 @@ export function registerCancelAppointmentTool(
   ctx: McpContext,
 ): void {
   server.registerTool(
-    "appointments.cancel",
+    "appointments_cancel",
     {
       title: "Cancel Appointment",
       description: "Cancel an existing scheduled appointment.",
@@ -35,9 +34,6 @@ export function registerCancelAppointmentTool(
         const appointment = await ctx.appointments.cancelAppointment(
           args.companyId,
           args.appointmentId,
-          {
-            reason: args.reason ?? null,
-          },
         );
         return ok({ appointment });
       } catch (error) {

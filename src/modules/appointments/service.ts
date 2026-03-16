@@ -72,9 +72,8 @@ export async function listCustomerAppointmentsService(customerId: string) {
 export async function cancelAppointmentService(
   companyId: string,
   appointmentId: string,
-  input: CancelAppointmentInput,
 ) {
-  return cancelAppointment(companyId, appointmentId, input);
+  return cancelAppointment(companyId, appointmentId);
 }
 
 export async function rescheduleAppointmentService(

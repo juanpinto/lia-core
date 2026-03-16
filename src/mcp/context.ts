@@ -1,7 +1,7 @@
 import { resolveCompanyCustomerService } from "../modules/customers/service.js";
 import {
   listActiveCompanyProducts,
-  searchCompanyProducts,
+  searchCompanyProduct,
 } from "../modules/products/service.js";
 import { getConversationContext } from "../modules/conversations/service.js";
 import {
@@ -17,7 +17,7 @@ export type McpContext = {
   };
   products: {
     listActiveProducts: typeof listActiveCompanyProducts;
-    searchCompanyProducts: typeof searchCompanyProducts;
+    searchCompanyProduct: typeof searchCompanyProduct;
   };
   conversations: {
     getConversationContext: typeof getConversationContext;
@@ -37,7 +37,7 @@ export function createMcpContext(): McpContext {
     },
     products: {
       listActiveProducts: listActiveCompanyProducts,
-      searchCompanyProducts,
+      searchCompanyProduct,
     },
     conversations: {
       getConversationContext: getConversationContext,
