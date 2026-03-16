@@ -10,9 +10,7 @@ export interface ConversationRecord {
   status: "open" | "closed";
   metadata: Record<string, unknown> | null;
   summary: string | null;
-  summaryUpdatedAt: string | null;
   startedAt: string;
-  endedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,11 +68,7 @@ function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
     status: row.status as ConversationRecord["status"],
     metadata: (row.metadata as Record<string, unknown> | null) ?? null,
     summary: (row.summary as string | null) ?? null,
-    summaryUpdatedAt: row.summary_updated_at
-      ? new Date(String(row.summary_updated_at)).toISOString()
-      : null,
     startedAt: new Date(String(row.started_at)).toISOString(),
-    endedAt: row.ended_at ? new Date(String(row.ended_at)).toISOString() : null,
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
   };

@@ -66,10 +66,8 @@ create table if not exists public.conversations (
   channel text not null,
   status text not null default 'open',
   started_at timestamptz not null default now(),
-  ended_at timestamptz null,
   metadata jsonb null,
   summary text null,
-  summary_updated_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint conversations_channel_check check (
