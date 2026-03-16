@@ -11,12 +11,9 @@ import { getCompanyCustomerIdForCustomerOrThrow } from "../customers/service.js"
 import type { z } from "zod";
 import type {
   CancelAppointmentBodySchema,
-  CreateAppointmentBodySchema,
   RescheduleAppointmentBodySchema,
   CreateCustomerAppointmentInput,
 } from "./schemas.js";
-
-type CreateAppointmentInput = z.infer<typeof CreateAppointmentBodySchema>;
 
 type CancelAppointmentInput = z.infer<typeof CancelAppointmentBodySchema>;
 type RescheduleAppointmentInput = z.infer<
@@ -44,7 +41,6 @@ export async function createAppointmentForCustomerService(
     endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
     createdVia: input.createdVia,
     notes: input.notes ?? null,
-    metadata: input.metadata ?? null,
   });
 }
 

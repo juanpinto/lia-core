@@ -29,7 +29,6 @@ export const CreateAppointmentBodySchema = z.object({
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   items: z.array(AppointmentProductInputSchema).min(1),
 });
 
@@ -44,7 +43,6 @@ export const RescheduleAppointmentBodySchema = z.object({
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("manual"),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const CreateCustomerAppointmentBodySchema = z.object({
@@ -56,7 +54,6 @@ export const CreateCustomerAppointmentBodySchema = z.object({
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export type CreateCustomerAppointmentInput = z.infer<

@@ -139,17 +139,13 @@ create table if not exists public.appointments (
   company_id uuid not null references public.companies(id) on delete cascade,
   company_customer_id uuid not null references public.company_customers(id) on delete cascade,
   conversation_id uuid null references public.conversations(id) on delete set null,
-  rescheduled_from_appointment_id uuid null references public.appointments(id) on delete set null,
   start_at_utc timestamptz not null,
   end_at_utc timestamptz not null,
   status text not null default 'scheduled',
   created_via text not null default 'whatsapp',
   notes text null,
-  metadata jsonb null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  cancelled_at timestamptz null,
-  completed_at timestamptz null,
   constraint appointments_status_check check (
     status = any (array['scheduled'::text, 'cancelled'::text, 'completed'::text, 'no_show'::text])
   ),

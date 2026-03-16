@@ -14,7 +14,6 @@ const InputSchema = z.object({
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("manual"),
   notes: z.string().trim().min(1).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 const OutputSchema = AppointmentOutputSchema;
@@ -27,8 +26,7 @@ export function registerRescheduleAppointmentTool(
     "appointments.reschedule",
     {
       title: "Reschedule Appointment",
-      description:
-        "Reschedule an appointment by creating a replacement appointment linked to the original.",
+      description: "Reschedule an appointment by updating the existing record.",
       inputSchema: InputSchema,
       outputSchema: OutputSchema,
       annotations: {
@@ -46,7 +44,6 @@ export function registerRescheduleAppointmentTool(
             endAtUtc: args.endAtUtc,
             createdVia: args.createdVia,
             notes: args.notes ?? null,
-            metadata: args.metadata ?? null,
           },
         );
         return ok({ appointment });
