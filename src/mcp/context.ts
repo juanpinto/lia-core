@@ -3,8 +3,8 @@ import { searchCompanyProducts } from "../modules/products/service.js";
 import { getConversationContext } from "../modules/conversations/service.js";
 import {
   cancelAppointmentService,
-  createAppointmentService,
-  listCompanyCustomerAppointmentsService,
+  createAppointmentForCustomerService,
+  listCustomerAppointmentsService,
   rescheduleAppointmentService,
 } from "../modules/appointments/service.js";
 
@@ -19,8 +19,8 @@ export type McpContext = {
     getConversationContext: typeof getConversationContext;
   };
   appointments: {
-    createAppointment: typeof createAppointmentService;
-    listCompanyCustomerAppointments: typeof listCompanyCustomerAppointmentsService;
+    createAppointment: typeof createAppointmentForCustomerService;
+    listAppointmentsForCustomer: typeof listCustomerAppointmentsService;
     cancelAppointment: typeof cancelAppointmentService;
     rescheduleAppointment: typeof rescheduleAppointmentService;
   };
@@ -38,8 +38,8 @@ export function createMcpContext(): McpContext {
       getConversationContext: getConversationContext,
     },
     appointments: {
-      createAppointment: createAppointmentService,
-      listCompanyCustomerAppointments: listCompanyCustomerAppointmentsService,
+      createAppointment: createAppointmentForCustomerService,
+      listAppointmentsForCustomer: listCustomerAppointmentsService,
       cancelAppointment: cancelAppointmentService,
       rescheduleAppointment: rescheduleAppointmentService,
     },

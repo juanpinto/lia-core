@@ -3,36 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "../../context.js";
 import { ok } from "../../result.js";
 import { toMcpErrorResult } from "../../errorMapper.js";
-
-const AppointmentItemSchema = z.object({
-  id: z.uuid(),
-  productId: z.uuid(),
-  quantity: z.number().int(),
-  unitPriceCents: z.number().int().nullable(),
-  durationMinutes: z.number().int().nullable(),
-  sortOrder: z.number().int(),
-  notes: z.string().nullable(),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
-});
-
-const AppointmentSchema = z.object({
-  id: z.uuid(),
-  companyId: z.uuid(),
-  companyCustomerId: z.uuid(),
-  conversationId: z.uuid().nullable(),
-  rescheduledFromAppointmentId: z.uuid().nullable(),
-  startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
-  status: z.enum(["scheduled", "cancelled", "completed", "no_show"]),
-  createdVia: z.enum(["whatsapp", "instagram", "web", "manual"]),
-  notes: z.string().nullable(),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
-  cancelledAt: z.iso.datetime({ offset: true }).nullable(),
-  completedAt: z.iso.datetime({ offset: true }).nullable(),
-  createdAt: z.iso.datetime({ offset: true }),
-  updatedAt: z.iso.datetime({ offset: true }),
-  items: z.array(AppointmentItemSchema),
-});
+import { AppointmentOutputSchema } from "./types.js";
 
 const InputSchema = z.object({
   companyId: z.uuid(),
@@ -46,9 +17,7 @@ const InputSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
-const OutputSchema = z.object({
-  appointment: AppointmentSchema,
-});
+const OutputSchema = AppointmentOutputSchema;
 
 export function registerRescheduleAppointmentTool(
   server: McpServer,

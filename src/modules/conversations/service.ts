@@ -42,7 +42,7 @@ export interface ConversationContextForBrain {
     startedAt: string;
     updatedAt: string;
   };
-  messages: Array<{
+  conversationHistory: Array<{
     id: string;
     direction: "inbound" | "outbound";
     role: "user" | "assistant" | "tool" | "system" | null;
@@ -56,13 +56,6 @@ export interface ConversationContextForBrain {
     createdAt: string;
     expiresAt: string | null;
   } | null;
-  recentAppointments: Array<{
-    id: string;
-    status: string;
-    startAtUtc: string;
-    endAtUtc: string;
-    notes: string | null;
-  }>;
 }
 
 export async function ingestInboundConversationMessage(
@@ -141,14 +134,9 @@ export async function getConversationContext(
     );
   }
 
-  const [messagesDesc, pendingAction, recentAppointments] = await Promise.all([
+  const [conversationHistory, pendingAction] = await Promise.all([
     listRecentConversationContextMessages(companyId, conversationId, 10),
     getActivePendingActionForConversation(companyId, conversationId),
-    listUpcomingAppointmentsForCompanyCustomer(
-      companyId,
-      base.companyCustomerId,
-      10,
-    ),
   ]);
 
   return {
@@ -169,7 +157,7 @@ export async function getConversationContext(
       startedAt: base.startedAt,
       updatedAt: base.updatedAt,
     },
-    messages: [...messagesDesc].reverse(),
+    conversationHistory: [...conversationHistory].reverse(),
     pendingAction: pendingAction
       ? {
           id: pendingAction.id,
@@ -179,12 +167,5 @@ export async function getConversationContext(
           expiresAt: pendingAction.expiresAt,
         }
       : null,
-    recentAppointments: recentAppointments.map((appointment) => ({
-      id: appointment.id,
-      status: appointment.status,
-      startAtUtc: appointment.startAtUtc,
-      endAtUtc: appointment.endAtUtc,
-      notes: appointment.notes,
-    })),
   };
 }

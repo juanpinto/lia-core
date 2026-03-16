@@ -1,5 +1,11 @@
 import { NotFoundError } from '../../lib/errors.js';
-import { createCompanyCustomer, getCompanyCustomer, listCompanyCustomers, resolveCompanyCustomer } from './repository.js';
+import {
+  createCompanyCustomer,
+  getCompanyCustomer,
+  getCompanyCustomerIdByCustomerId,
+  listCompanyCustomers,
+  resolveCompanyCustomer,
+} from './repository.js';
 import type { z } from 'zod';
 import type { CreateCompanyCustomerBodySchema, ResolveCompanyCustomerBodySchema } from './schemas.js';
 
@@ -24,4 +30,12 @@ export async function getCompanyCustomerOrThrow(companyId: string, companyCustom
     throw new NotFoundError(`Company customer ${companyCustomerId} was not found for company ${companyId}.`);
   }
   return customer;
+}
+
+export async function getCompanyCustomerIdForCustomerOrThrow(companyId: string, customerId: string) {
+  const companyCustomerId = await getCompanyCustomerIdByCustomerId(companyId, customerId);
+  if (!companyCustomerId) {
+    throw new NotFoundError(`Customer ${customerId} was not found for company ${companyId}.`);
+  }
+  return companyCustomerId;
 }

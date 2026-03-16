@@ -1,8 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const CompanyParamsSchema = z.object({ companyId: z.uuid() });
-export const AppointmentParamsSchema = z.object({ companyId: z.uuid(), appointmentId: z.uuid() });
-export const CompanyCustomerAppointmentsParamsSchema = z.object({ companyId: z.uuid(), companyCustomerId: z.uuid() });
+export const AppointmentParamsSchema = z.object({
+  companyId: z.uuid(),
+  appointmentId: z.uuid(),
+});
+export const CompanyCustomerAppointmentsParamsSchema = z.object({
+  companyId: z.uuid(),
+  companyCustomerId: z.uuid(),
+});
 
 const AppointmentProductInputSchema = z.object({
   productId: z.uuid(),
@@ -19,7 +25,9 @@ export const CreateAppointmentBodySchema = z.object({
   conversationId: z.uuid().nullable().optional(),
   startAtUtc: z.iso.datetime({ offset: true }),
   endAtUtc: z.iso.datetime({ offset: true }),
-  createdVia: z.enum(['whatsapp', 'instagram', 'web', 'manual']).default('whatsapp'),
+  createdVia: z
+    .enum(["whatsapp", "instagram", "web", "manual"])
+    .default("whatsapp"),
   notes: z.string().trim().min(1).nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).nullable().optional(),
   items: z.array(AppointmentProductInputSchema).min(1),
@@ -32,7 +40,25 @@ export const CancelAppointmentBodySchema = z.object({
 export const RescheduleAppointmentBodySchema = z.object({
   startAtUtc: z.iso.datetime({ offset: true }),
   endAtUtc: z.iso.datetime({ offset: true }),
-  createdVia: z.enum(['whatsapp', 'instagram', 'web', 'manual']).default('manual'),
+  createdVia: z
+    .enum(["whatsapp", "instagram", "web", "manual"])
+    .default("manual"),
   notes: z.string().trim().min(1).nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
+
+export const CreateCustomerAppointmentBodySchema = z.object({
+  customerId: z.uuid(),
+  conversationId: z.uuid().nullable().optional(),
+  startAtUtc: z.iso.datetime({ offset: true }),
+  endAtUtc: z.iso.datetime({ offset: true }),
+  createdVia: z
+    .enum(["whatsapp", "instagram", "web", "manual"])
+    .default("whatsapp"),
+  notes: z.string().trim().min(1).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+
+export type CreateCustomerAppointmentInput = z.infer<
+  typeof CreateCustomerAppointmentBodySchema
+>;

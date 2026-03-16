@@ -226,3 +226,19 @@ export async function getCompanyCustomer(
 
   return result.rowCount ? mapRow(result.rows[0]!) : null;
 }
+
+export async function getCompanyCustomerIdByCustomerId(
+  companyId: string,
+  customerId: string,
+): Promise<string | null> {
+  const result = await pool.query(
+    `
+    select id
+    from public.company_customers
+    where company_id = $1 and customer_id = $2
+    `,
+    [companyId, customerId],
+  );
+
+  return result.rowCount ? String(result.rows[0]!.id) : null;
+}
