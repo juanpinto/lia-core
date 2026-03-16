@@ -160,16 +160,13 @@ create table if not exists public.appointment_products (
   appointment_id uuid not null references public.appointments(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete restrict,
   quantity integer not null default 1 check (quantity > 0),
-  unit_price integer null check (unit_price is null or unit_price >= 0),
-  duration_minutes integer null check (duration_minutes is null or duration_minutes >= 0),
-  sort_order integer not null default 0 check (sort_order >= 0),
   notes text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create index if not exists appointment_products_appointment_idx
-on public.appointment_products using btree (appointment_id, sort_order, created_at);
+on public.appointment_products using btree (appointment_id, created_at);
 
 create index if not exists appointment_products_product_idx
 on public.appointment_products using btree (product_id);

@@ -41,6 +41,7 @@ export async function createAppointmentForCustomerService(
     endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
     createdVia: input.createdVia,
     notes: input.notes ?? null,
+    items: input.items,
   });
 }
 

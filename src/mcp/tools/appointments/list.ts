@@ -3,13 +3,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "../../context.js";
 import { ok } from "../../result.js";
 import { toMcpErrorResult } from "../../errorMapper.js";
-import { CustomerAppointmentsOutputSchema } from "./types.js";
+import { AppointmentsOutputSchema } from "./types.js";
 
 const InputSchema = z.object({
   customerId: z.uuid(),
 });
 
-const OutputSchema = CustomerAppointmentsOutputSchema;
+const OutputSchema = AppointmentsOutputSchema;
 
 export function registerListAppointmentsTool(
   server: McpServer,
@@ -19,7 +19,8 @@ export function registerListAppointmentsTool(
     "appointments_list",
     {
       title: "List Appointments",
-      description: "List appointments for a customer.",
+      description:
+        "List appointments for a customer, including appointment items.",
       inputSchema: InputSchema,
       outputSchema: OutputSchema,
       annotations: {

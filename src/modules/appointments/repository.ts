@@ -19,9 +19,6 @@ export interface AppointmentItemRecord {
   id: string;
   productId: string;
   quantity: number;
-  unitPrice: number | null;
-  durationMinutes: number | null;
-  sortOrder: number;
   notes: string | null;
 }
 
@@ -62,9 +59,6 @@ function mapAppointmentItem(
     id: String(row.id),
     productId: String(row.product_id),
     quantity: Number(row.quantity),
-    unitPrice: (row.unit_price as number | null) ?? null,
-    durationMinutes: (row.duration_minutes as number | null) ?? null,
-    sortOrder: Number(row.sort_order),
     notes: (row.notes as string | null) ?? null,
   };
 }
@@ -120,15 +114,12 @@ async function insertItems(
   for (const item of items) {
     await client.query(
       `insert into public.appointment_products
-        (appointment_id, product_id, quantity, unit_price, duration_minutes, sort_order, notes)
-       values ($1, $2, $3, $4, $5, $6, $7)`,
+        (appointment_id, product_id, quantity, notes)
+       values ($1, $2, $3, $4)`,
       [
         appointmentId,
         item.productId,
         item.quantity,
-        item.unitPrice ?? null,
-        item.durationMinutes ?? null,
-        item.sortOrder,
         item.notes ?? null,
       ],
     );
@@ -140,10 +131,10 @@ async function getItems(
   appointmentId: string,
 ): Promise<AppointmentItemRecord[]> {
   const result = await client.query(
-    `select id, product_id, quantity, unit_price, duration_minutes, sort_order, notes
+    `select id, product_id, quantity, notes
      from public.appointment_products
      where appointment_id = $1
-     order by sort_order asc, created_at asc`,
+     order by created_at asc`,
     [appointmentId],
   );
   return result.rows.map(mapAppointmentItem);
@@ -153,7 +144,7 @@ export async function createAppointment(
   companyId: string,
   customerCompanyId: string,
   input: CreateCustomerAppointmentInput,
-): Promise<CustomerAppointmentRecord> {
+): Promise<AppointmentRecord> {
   return withTransaction(async (client) => {
     const appointmentResult = await client.query(
       `insert into public.appointments
@@ -172,7 +163,10 @@ export async function createAppointment(
     );
 
     const row = appointmentResult.rows[0]!;
-    return mapCustomerAppointment(row);
+    const appointmentId = String(row.id);
+    await insertItems(client, appointmentId, input.items);
+    const items = await getItems(client, appointmentId);
+    return mapAppointment(row, items);
   });
 }
 
@@ -242,7 +236,7 @@ export async function listAppointmentsForCompanyCustomer(
 
 export async function listAppointmentsForCustomer(
   customerId: string,
-): Promise<CustomerAppointmentRecord[]> {
+): Promise<AppointmentRecord[]> {
   const result = await pool.query(
     `select a.*
      from public.appointments a
@@ -253,9 +247,10 @@ export async function listAppointmentsForCustomer(
     [customerId],
   );
 
-  const appointments: CustomerAppointmentRecord[] = [];
+  const appointments: AppointmentRecord[] = [];
   for (const row of result.rows) {
-    appointments.push(mapCustomerAppointment(row));
+    const items = await getItems(pool, String(row.id));
+    appointments.push(mapAppointment(row, items));
   }
   return appointments;
 }

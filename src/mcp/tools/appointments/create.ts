@@ -3,7 +3,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "../../context.js";
 import { ok } from "../../result.js";
 import { toMcpErrorResult } from "../../errorMapper.js";
-import { CustomerAppointmentOutputSchema } from "./types.js";
+import {
+  AppointmentItemInputSchema,
+  AppointmentOutputSchema,
+} from "./types.js";
 
 const InputSchema = z.object({
   companyId: z.uuid(),
@@ -13,9 +16,10 @@ const InputSchema = z.object({
   channel: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
+  items: z.array(AppointmentItemInputSchema).min(1),
 });
 
-export const OutputSchema = CustomerAppointmentOutputSchema;
+export const OutputSchema = AppointmentOutputSchema;
 
 export function registerCreateAppointmentTool(
   server: McpServer,
@@ -43,6 +47,7 @@ export function registerCreateAppointmentTool(
             startAtUtc: args.startAtUtc,
             endAtUtc: "",
             createdVia: args.channel,
+            items: args.items,
           },
         );
 

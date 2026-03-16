@@ -13,9 +13,6 @@ export const CompanyCustomerAppointmentsParamsSchema = z.object({
 const AppointmentProductInputSchema = z.object({
   productId: z.uuid(),
   quantity: z.number().int().positive().default(1),
-  unitPrice: z.number().int().min(0).nullable().optional(),
-  durationMinutes: z.number().int().min(0).nullable().optional(),
-  sortOrder: z.number().int().min(0).default(0),
   notes: z.string().trim().min(1).nullable().optional(),
 });
 
@@ -53,6 +50,7 @@ export const CreateCustomerAppointmentBodySchema = z.object({
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
   notes: z.string().trim().min(1).nullable().optional(),
+  items: z.array(AppointmentProductInputSchema).min(1),
 });
 
 export type CreateCustomerAppointmentInput = z.infer<
