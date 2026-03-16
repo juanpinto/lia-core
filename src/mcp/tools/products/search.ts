@@ -7,13 +7,11 @@ import { toMcpErrorResult } from "../../errorMapper.js";
 const ProductSchema = z.object({
   id: z.uuid(),
   companyId: z.uuid(),
-  externalId: z.string().nullable(),
   name: z.string(),
   description: z.string().nullable(),
   active: z.boolean(),
-  priceCents: z.number().int().nullable(),
+  price: z.number().int().nullable(),
   durationMinutes: z.number().int().nullable(),
-  metadata: z.record(z.string(), z.unknown()).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 });

@@ -116,20 +116,14 @@ on public.messages using btree (conversation_id, created_at);
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies(id) on delete cascade,
-  external_id text null,
   name text not null,
   description text null,
   active boolean not null default true,
-  price_cents integer null check (price_cents is null or price_cents >= 0),
+  price integer null check (price is null or price >= 0),
   duration_minutes integer null check (duration_minutes is null or duration_minutes >= 0),
-  metadata jsonb null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
-create unique index if not exists products_company_external_uidx
-on public.products using btree (company_id, external_id)
-where external_id is not null;
 
 create index if not exists products_company_active_name_idx
 on public.products using btree (company_id, active, name);
