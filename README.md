@@ -42,6 +42,7 @@ cp .env.example .env
 ```
 
 2. Update `DATABASE_URL`.
+   Also set `HTTP_INTERNAL_API_KEY` and `HTTP_GATEWAY_API_KEY`.
 
 3. Install dependencies:
 
@@ -78,6 +79,7 @@ When Meta sends you a message, resolve the tenant-aware customer first.
 ```bash
 curl -X POST http://localhost:3000/v1/companies/<companyId>/customers/resolve \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <HTTP_INTERNAL_API_KEY>" \
   -d '{
     "channel": "whatsapp",
     "platformUserId": "16414511661",
@@ -149,9 +151,9 @@ It already includes:
 - Postgres connection pooling
 - a migration runner
 - `updated_at` triggers in SQL
+- service-to-service auth for the HTTP API and MCP API
 
 It does **not** yet include:
-- authentication / service-to-service auth
 - rate limiting
 - automated tests
 - MCP adapter layer
