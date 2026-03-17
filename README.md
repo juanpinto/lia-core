@@ -99,6 +99,24 @@ Search products from `lia-brain` or an MCP adapter through `lia-core`.
 ### Step 6 — move appointment flows
 Create, cancel, reschedule, and list appointments from here.
 
+## Fly Deploy
+
+This repo has two Fly apps, so there is no single root `fly.toml`.
+
+Use one of these commands:
+
+```bash
+npm run deploy:api
+npm run deploy:mcp
+```
+
+Or call Fly directly with the config file:
+
+```bash
+fly deploy -c fly.api.toml
+fly deploy -c fly.mcp.toml
+```
+
 ## Main routes
 
 ### Companies

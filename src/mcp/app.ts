@@ -13,7 +13,9 @@ import { requireMcpApiKey } from "./auth.js";
 export function createMcpHttpApp() {
   const app = createMcpExpressApp({
     host: "0.0.0.0",
-    allowedHosts: mcpEnv.allowedHosts,
+    ...(mcpEnv.allowedHosts.length
+      ? { allowedHosts: mcpEnv.allowedHosts }
+      : {}),
   });
 
   app.disable("x-powered-by");

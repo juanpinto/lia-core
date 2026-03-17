@@ -3,9 +3,10 @@ import { closePool } from "../db/index.js";
 import { createMcpHttpApp } from "./app.js";
 import { mcpEnv } from "./config.js";
 
+const host = "0.0.0.0";
 const app = createMcpHttpApp();
-const server = app.listen(mcpEnv.MCP_PORT, () => {
-  logger.info({ port: mcpEnv.MCP_PORT }, "lia-core MCP listening.");
+const server = app.listen(mcpEnv.MCP_PORT, host, () => {
+  logger.info({ host, port: mcpEnv.MCP_PORT }, "lia-core MCP listening.");
 });
 
 server.on("error", (error) => {

@@ -3,9 +3,10 @@ import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { closePool } from './db/index.js';
 
+const host = '0.0.0.0';
 const app = createApp();
-const server = app.listen(env.PORT, () => {
-  logger.info({ port: env.PORT }, 'lia-core listening.');
+const server = app.listen(env.PORT, host, () => {
+  logger.info({ host, port: env.PORT }, 'lia-core listening.');
 });
 
 server.on('error', (error) => {

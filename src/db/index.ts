@@ -1,13 +1,13 @@
 import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from 'pg';
-import { env } from '../config/env.js';
+import { sharedEnv } from '../config/shared-env.js';
 import { logger } from '../config/logger.js';
 
 export const pool = new Pool({
-  connectionString: env.DATABASE_URL,
-  max: env.NODE_ENV === 'production' ? 20 : 10,
+  connectionString: sharedEnv.DATABASE_URL,
+  max: sharedEnv.NODE_ENV === 'production' ? 20 : 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
-  statement_timeout: 20_000,
+  query_timeout: 20_000,
   application_name: 'lia-core',
 });
 

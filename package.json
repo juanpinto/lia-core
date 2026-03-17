@@ -13,7 +13,9 @@
     "mcp:dev": "tsx watch src/mcp/server.ts",
     "mcp:start": "node dist/mcp/server.js",
     "migrate": "tsx src/scripts/migrate.ts",
-    "check": "tsc -p tsconfig.json --noEmit"
+    "check": "tsc -p tsconfig.json --noEmit",
+    "deploy:api": "fly deploy -c fly.api.toml",
+    "deploy:mcp": "fly deploy -c fly.mcp.toml"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

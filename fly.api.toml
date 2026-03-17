@@ -1,0 +1,29 @@
+app = "lia-core-api"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = 15
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "node dist/scripts/migrate.js"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_start_machines = true
+  auto_stop_machines = "off"
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"

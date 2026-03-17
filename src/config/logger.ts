@@ -1,8 +1,8 @@
 import pino from 'pino';
-import { env } from './env.js';
+import { sharedEnv } from './shared-env.js';
 
 export const logger = pino({
-  level: env.LOG_LEVEL,
+  level: sharedEnv.LOG_LEVEL,
   redact: {
     paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
     censor: '[REDACTED]',
