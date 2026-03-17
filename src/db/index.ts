@@ -15,8 +15,28 @@ pool.on('error', (error) => {
   logger.error({ err: error }, 'Unexpected Postgres pool error.');
 });
 
+let poolClosePromise: Promise<void> | null = null;
+
 export interface DbClient {
   query<R extends QueryResultRow = QueryResultRow>(text: string, params?: readonly unknown[]): Promise<QueryResult<R>>;
+}
+
+export async function isDatabaseHealthy(): Promise<boolean> {
+  try {
+    await pool.query('select 1');
+    return true;
+  } catch (error) {
+    logger.warn({ err: error }, 'Database health check failed.');
+    return false;
+  }
+}
+
+export function closePool(): Promise<void> {
+  if (!poolClosePromise) {
+    poolClosePromise = pool.end();
+  }
+
+  return poolClosePromise;
 }
 
 export async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {

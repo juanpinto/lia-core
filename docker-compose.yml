@@ -3,11 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["sh", "-c", "node dist/scripts/migrate.js && node dist/server.js"]
     environment:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/lia_core
+      HTTP_INTERNAL_API_KEY: ${HTTP_INTERNAL_API_KEY:?HTTP_INTERNAL_API_KEY is required}
+      HTTP_GATEWAY_API_KEY: ${HTTP_GATEWAY_API_KEY:?HTTP_GATEWAY_API_KEY is required}
       LOG_LEVEL: info
     ports:
       - "3000:3000"
@@ -24,10 +25,12 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/lia_core
+      HTTP_INTERNAL_API_KEY: ${HTTP_INTERNAL_API_KEY:?HTTP_INTERNAL_API_KEY is required}
+      HTTP_GATEWAY_API_KEY: ${HTTP_GATEWAY_API_KEY:?HTTP_GATEWAY_API_KEY is required}
       LOG_LEVEL: info
       MCP_PORT: 3100
-      MCP_API_KEY: ${MCP_API_KEY:-lia-core-dev-secret-key-12345}
-      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-localhost,127.0.0.1},lia-core-mcp,host.docker.internal
+      MCP_API_KEY: ${MCP_API_KEY:?MCP_API_KEY is required}
+      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-localhost,127.0.0.1,lia-core-mcp,host.docker.internal}
       MCP_ENABLE_JSON_RESPONSE: ${MCP_ENABLE_JSON_RESPONSE:-true}
     ports:
       - "3100:3100"
@@ -35,7 +38,7 @@ services:
       postgres:
         condition: service_healthy
       lia-core:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
