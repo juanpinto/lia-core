@@ -4,18 +4,32 @@ import { findCompanyByPlatformAccountId } from "../channel-accounts/repository.j
 import { resolveCompanyCustomerIds } from "../customers/repository.js";
 import { getActivePendingActionForConversation } from "../pending-actions/repository.js";
 import {
+  appendConversationSummaryPatch,
   createConversationForInbound,
   findReusableConversation,
   getConversationContextBase,
   insertInboundMessage,
+  insertOutboundMessage,
   listRecentConversationContextMessages,
 } from "./repository.js";
 import type { z } from "zod";
-import type { IngestInboundMessageBodySchema } from "./schemas.js";
+import type {
+  IngestInboundMessageBodySchema,
+  UpdateConversationBodySchema,
+} from "./schemas.js";
 
 type IngestInboundMessageInput = z.infer<typeof IngestInboundMessageBodySchema>;
+type IngestOutboundMessageInput = z.infer<typeof UpdateConversationBodySchema>;
 
 export interface IngestInboundConversationMessageResult {
+  customerId: string;
+  companyId: string;
+  companyName: string;
+  conversationId: string;
+  messageId: string;
+}
+
+export interface IngestOutboundConversationMessageResult {
   customerId: string;
   companyId: string;
   companyName: string;
@@ -111,6 +125,79 @@ export async function ingestInboundConversationMessage(
         body: input.body,
       },
     );
+
+    return {
+      customerId,
+      companyId: company.id,
+      companyName: company.name,
+      conversationId: message.conversationId,
+      messageId: message.messageId,
+    };
+  });
+}
+
+export async function ingestOutboundConversationMessage(
+  input: IngestOutboundMessageInput,
+): Promise<IngestOutboundConversationMessageResult> {
+  return withTransaction(async (client) => {
+    const company = await findCompanyByPlatformAccountId(
+      client,
+      input.channel,
+      input.companyPlatformId,
+    );
+
+    if (!company) {
+      throw new NotFoundError(
+        `Company was not found for channel=${input.channel} and platformAccountId=${input.companyPlatformId}.`,
+      );
+    }
+
+    const { customerId, companyCustomerId } = await resolveCompanyCustomerIds(
+      client,
+      company.id,
+      {
+        customerName: null,
+        channel: input.channel,
+        platformUserId: input.customerPlatformId,
+      },
+    );
+
+    const conversationId = await findReusableConversation(
+      client,
+      company.id,
+      companyCustomerId,
+      input.channel,
+      company.channelAccountId,
+    );
+
+    if (!conversationId) {
+      throw new NotFoundError(
+        `Open conversation was not found for channel=${input.channel} and customerPlatformId=${input.customerPlatformId}.`,
+      );
+    }
+
+    const message = await insertOutboundMessage(
+      client,
+      company.id,
+      conversationId,
+      {
+        channel: input.channel,
+        channelAccountId: company.channelAccountId,
+        externalMessageId: input.externalMessageId,
+        senderId: input.companyPlatformId,
+        body: input.body,
+      },
+    );
+
+    const summaryPatch = input.summary_patch.trim();
+    if (message.created && summaryPatch) {
+      await appendConversationSummaryPatch(
+        client,
+        company.id,
+        message.conversationId,
+        summaryPatch,
+      );
+    }
 
     return {
       customerId,

@@ -53,9 +53,10 @@ export interface ConversationContextMessageRecord {
   createdAt: string;
 }
 
-export interface InboundMessageRecord {
+export interface MessageWriteRecord {
   messageId: string;
   conversationId: string;
+  created: boolean;
 }
 
 function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
@@ -263,7 +264,7 @@ async function getExistingMessageByExternalId(
   companyId: string,
   channel: string,
   externalMessageId: string,
-): Promise<InboundMessageRecord> {
+): Promise<MessageWriteRecord> {
   const result = await client.query(
     `
     select id, conversation_id
@@ -279,6 +280,7 @@ async function getExistingMessageByExternalId(
   return {
     messageId: String(result.rows[0]!.id),
     conversationId: String(result.rows[0]!.conversation_id),
+    created: false,
   };
 }
 
@@ -293,7 +295,7 @@ export async function insertInboundMessage(
     senderId: string | null;
     body?: string | null;
   },
-): Promise<InboundMessageRecord> {
+): Promise<MessageWriteRecord> {
   const inserted = await client.query(
     `
     insert into public.messages
@@ -333,6 +335,7 @@ export async function insertInboundMessage(
     return {
       messageId: String(inserted.rows[0]!.id),
       conversationId: String(inserted.rows[0]!.conversation_id),
+      created: true,
     };
   }
 
@@ -341,5 +344,90 @@ export async function insertInboundMessage(
     companyId,
     input.channel,
     input.externalMessageId,
+  );
+}
+
+export async function insertOutboundMessage(
+  client: PoolClient,
+  companyId: string,
+  conversationId: string,
+  input: {
+    channel: string;
+    channelAccountId: string | null;
+    externalMessageId: string;
+    senderId: string | null;
+    body?: string | null;
+  },
+): Promise<MessageWriteRecord> {
+  const inserted = await client.query(
+    `
+    insert into public.messages
+      (
+        company_id,
+        conversation_id,
+        channel_account_id,
+        channel,
+        external_message_id,
+        direction,
+        sender_id,
+        body,
+        role
+      )
+    values ($1, $2, $3, $4, $5, 'outbound', $6, $7, 'assistant')
+    on conflict (company_id, channel, external_message_id)
+    do nothing
+    returning id, conversation_id
+    `,
+    [
+      companyId,
+      conversationId,
+      input.channelAccountId,
+      input.channel,
+      input.externalMessageId,
+      input.senderId,
+      input.body ?? null,
+    ],
+  );
+
+  if (inserted.rowCount) {
+    await client.query(
+      `update public.conversations set updated_at = now() where id = $1`,
+      [conversationId],
+    );
+
+    return {
+      messageId: String(inserted.rows[0]!.id),
+      conversationId: String(inserted.rows[0]!.conversation_id),
+      created: true,
+    };
+  }
+
+  return getExistingMessageByExternalId(
+    client,
+    companyId,
+    input.channel,
+    input.externalMessageId,
+  );
+}
+
+export async function appendConversationSummaryPatch(
+  client: PoolClient,
+  companyId: string,
+  conversationId: string,
+  summaryPatch: string,
+): Promise<void> {
+  await client.query(
+    `
+    update public.conversations
+    set
+      summary = case
+        when summary is null or btrim(summary) = '' then $3
+        else summary || E'\n\n' || $3
+      end,
+      updated_at = now()
+    where company_id = $1
+      and id = $2
+    `,
+    [companyId, conversationId, summaryPatch],
   );
 }
