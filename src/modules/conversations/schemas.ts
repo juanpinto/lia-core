@@ -18,9 +18,9 @@ export const ProcessInboundMessageBodySchema = z.object({
 
 export const ProcessOutboundMessageBodySchema = z.object({
   channel: CoreChannelSchema,
-  companyPlatformId: z.string().trim().min(1),
+  companyId: z.string().trim().min(1),
   externalMessageId: z.string().trim().min(1),
-  customerPlatformId: z.string().trim().min(1),
+  customerId: z.string().trim().min(1),
   body: z.string().trim().min(1),
   summary_patch: z.string(),
 });

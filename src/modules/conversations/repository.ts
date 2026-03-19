@@ -44,6 +44,13 @@ export interface MessageWriteRecord {
   created: boolean;
 }
 
+export interface ProcessOutboundMessageTargetRecord {
+  companyName: string;
+  conversationId: string;
+  channelAccountId: string | null;
+  companyPlatformAccountId: string | null;
+}
+
 function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
   return {
     id: String(row.id),
@@ -196,6 +203,50 @@ export async function findReusableConversation(
   );
 
   return result.rowCount ? String(result.rows[0]!.id) : null;
+}
+
+export async function findProcessOutboundMessageTarget(
+  client: PoolClient,
+  companyId: string,
+  customerId: string,
+  channel: string,
+): Promise<ProcessOutboundMessageTargetRecord | null> {
+  const result = await client.query(
+    `
+    select
+      co.name as company_name,
+      c.id as conversation_id,
+      c.channel_account_id,
+      ca.platform_account_id as company_platform_account_id
+    from public.conversations c
+    inner join public.company_customers cc
+      on cc.id = c.company_customer_id
+    inner join public.companies co
+      on co.id = c.company_id
+    left join public.channel_accounts ca
+      on ca.id = c.channel_account_id
+    where c.company_id = $1
+      and cc.customer_id = $2
+      and c.channel = $3
+      and c.status = 'open'
+      and c.updated_at >= now() - ($4::int * interval '1 hour')
+    order by c.updated_at desc
+    limit 1
+    `,
+    [companyId, customerId, channel, 24],
+  );
+
+  if (!result.rowCount) {
+    return null;
+  }
+
+  return {
+    companyName: String(result.rows[0]!.company_name),
+    conversationId: String(result.rows[0]!.conversation_id),
+    channelAccountId: (result.rows[0]!.channel_account_id as string | null) ?? null,
+    companyPlatformAccountId:
+      (result.rows[0]!.company_platform_account_id as string | null) ?? null,
+  };
 }
 
 export async function createConversationForInbound(

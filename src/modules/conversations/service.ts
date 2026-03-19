@@ -6,6 +6,7 @@ import { getActivePendingActionForConversation } from "../pending-actions/reposi
 import {
   appendConversationSummaryPatch,
   createConversationForInbound,
+  findProcessOutboundMessageTarget,
   findReusableConversation,
   getConversationContextBase,
   insertInboundMessage,
@@ -145,51 +146,28 @@ export async function processOutboundMessage(
   input: ProcessOutboundMessageInput,
 ): Promise<ProcessOutboundMessageResult> {
   return withTransaction(async (client) => {
-    const company = await findCompanyByPlatformAccountId(
+    const target = await findProcessOutboundMessageTarget(
       client,
+      input.companyId,
+      input.customerId,
       input.channel,
-      input.companyPlatformId,
     );
 
-    if (!company) {
+    if (!target) {
       throw new NotFoundError(
-        `Company was not found for channel=${input.channel} and platformAccountId=${input.companyPlatformId}.`,
-      );
-    }
-
-    const { customerId, companyCustomerId } = await resolveCompanyCustomerIds(
-      client,
-      company.id,
-      {
-        customerName: null,
-        channel: input.channel,
-        platformUserId: input.customerPlatformId,
-      },
-    );
-
-    const conversationId = await findReusableConversation(
-      client,
-      company.id,
-      companyCustomerId,
-      input.channel,
-      company.channelAccountId,
-    );
-
-    if (!conversationId) {
-      throw new NotFoundError(
-        `Open conversation was not found for channel=${input.channel} and customerPlatformId=${input.customerPlatformId}.`,
+        `Open conversation was not found for companyId=${input.companyId}, customerId=${input.customerId}, channel=${input.channel}.`,
       );
     }
 
     const message = await insertOutboundMessage(
       client,
-      company.id,
-      conversationId,
+      input.companyId,
+      target.conversationId,
       {
         channel: input.channel,
-        channelAccountId: company.channelAccountId,
+        channelAccountId: target.channelAccountId,
         externalMessageId: input.externalMessageId,
-        senderId: input.companyPlatformId,
+        senderId: target.companyPlatformAccountId,
         body: input.body,
       },
     );
@@ -198,16 +176,16 @@ export async function processOutboundMessage(
     if (message.created && summaryPatch) {
       await appendConversationSummaryPatch(
         client,
-        company.id,
+        input.companyId,
         message.conversationId,
         summaryPatch,
       );
     }
 
     return {
-      customerId,
-      companyId: company.id,
-      companyName: company.name,
+      customerId: input.customerId,
+      companyId: input.companyId,
+      companyName: target.companyName,
       conversationId: message.conversationId,
       messageId: message.messageId,
     };
