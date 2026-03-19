@@ -14,22 +14,23 @@ import {
 } from "./repository.js";
 import type { z } from "zod";
 import type {
-  IngestInboundMessageBodySchema,
-  UpdateConversationBodySchema,
+  ProcessInboundMessageBodySchema,
+  ProcessOutboundMessageBodySchema,
 } from "./schemas.js";
 
-type IngestInboundMessageInput = z.infer<typeof IngestInboundMessageBodySchema>;
-type IngestOutboundMessageInput = z.infer<typeof UpdateConversationBodySchema>;
+type ProcessInboundMessageInput = z.infer<
+  typeof ProcessInboundMessageBodySchema
+>;
+type ProcessOutboundMessageInput = z.infer<
+  typeof ProcessOutboundMessageBodySchema
+>;
 
-export interface IngestInboundConversationMessageResult {
-  customerId: string;
+interface PersistInboundMessageResult {
   companyId: string;
-  companyName: string;
   conversationId: string;
-  messageId: string;
 }
 
-export interface IngestOutboundConversationMessageResult {
+interface ProcessOutboundMessageResult {
   customerId: string;
   companyId: string;
   companyName: string;
@@ -71,9 +72,9 @@ export interface ConversationContextForBrain {
   } | null;
 }
 
-export async function ingestInboundConversationMessage(
-  input: IngestInboundMessageInput,
-): Promise<IngestInboundConversationMessageResult> {
+async function persistInboundMessage(
+  input: ProcessInboundMessageInput,
+): Promise<PersistInboundMessageResult> {
   return withTransaction(async (client) => {
     const company = await findCompanyByPlatformAccountId(
       client,
@@ -87,7 +88,7 @@ export async function ingestInboundConversationMessage(
       );
     }
 
-    const { customerId, companyCustomerId } = await resolveCompanyCustomerIds(
+    const { companyCustomerId } = await resolveCompanyCustomerIds(
       client,
       company.id,
       {
@@ -127,18 +128,22 @@ export async function ingestInboundConversationMessage(
     );
 
     return {
-      customerId,
       companyId: company.id,
-      companyName: company.name,
       conversationId: message.conversationId,
-      messageId: message.messageId,
     };
   });
 }
 
-export async function ingestOutboundConversationMessage(
-  input: IngestOutboundMessageInput,
-): Promise<IngestOutboundConversationMessageResult> {
+export async function processInboundMessage(
+  input: ProcessInboundMessageInput,
+): Promise<ConversationContextForBrain> {
+  const result = await persistInboundMessage(input);
+  return getConversationContext(result.companyId, result.conversationId);
+}
+
+export async function processOutboundMessage(
+  input: ProcessOutboundMessageInput,
+): Promise<ProcessOutboundMessageResult> {
   return withTransaction(async (client) => {
     const company = await findCompanyByPlatformAccountId(
       client,
@@ -209,7 +214,7 @@ export async function ingestOutboundConversationMessage(
   });
 }
 
-export async function getConversationContext(
+async function getConversationContext(
   companyId: string,
   conversationId: string,
 ): Promise<ConversationContextForBrain> {

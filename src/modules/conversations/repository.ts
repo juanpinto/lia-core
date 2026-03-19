@@ -15,21 +15,6 @@ export interface ConversationRecord {
   updatedAt: string;
 }
 
-export interface MessageRecord {
-  id: string;
-  companyId: string;
-  conversationId: string;
-  channel: string;
-  channelAccountId: string | null;
-  externalMessageId: string;
-  direction: "inbound" | "outbound";
-  senderId: string | null;
-  body: string | null;
-  raw: Record<string, unknown> | null;
-  role: "user" | "assistant" | "system" | "tool" | null;
-  createdAt: string;
-}
-
 export interface ConversationContextBaseRecord {
   conversationId: string;
   companyId: string;
@@ -72,23 +57,6 @@ function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
     startedAt: new Date(String(row.started_at)).toISOString(),
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
-  };
-}
-
-function mapMessageRow(row: Record<string, unknown>): MessageRecord {
-  return {
-    id: String(row.id),
-    companyId: String(row.company_id),
-    conversationId: String(row.conversation_id),
-    channel: String(row.channel),
-    channelAccountId: (row.channel_account_id as string | null) ?? null,
-    externalMessageId: String(row.external_message_id),
-    direction: row.direction as MessageRecord["direction"],
-    senderId: (row.sender_id as string | null) ?? null,
-    body: (row.body as string | null) ?? null,
-    raw: (row.raw as Record<string, unknown> | null) ?? null,
-    role: (row.role as MessageRecord["role"]) ?? null,
-    createdAt: new Date(String(row.created_at)).toISOString(),
   };
 }
 

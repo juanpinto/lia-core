@@ -5,7 +5,6 @@ import { companiesRouter } from "../modules/companies/routes.js";
 import { channelAccountsRouter } from "../modules/channel-accounts/routes.js";
 import { customersRouter } from "../modules/customers/routes.js";
 import { productsRouter } from "../modules/products/routes.js";
-import { conversationsRouter } from "../modules/conversations/routes.js";
 import { appointmentsRouter } from "../modules/appointments/routes.js";
 import { pendingActionsRouter } from "../modules/pending-actions/routes.js";
 
@@ -26,6 +25,5 @@ export function registerRoutes(app: Express): void {
   );
 
   app.use("/health", healthRouter);
-  app.use("/v1/conversations", conversationsRouter);
   app.use("/v1", requireHttpService("internal"), internalApiRouter);
 }

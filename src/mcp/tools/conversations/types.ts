@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  ProcessInboundMessageBodySchema,
+  ProcessOutboundMessageBodySchema,
+} from "../../../modules/conversations/schemas.js";
 
 export const MessageSchema = z.object({
   id: z.uuid(),
@@ -16,12 +20,9 @@ export const PendingActionSchema = z.object({
   expiresAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
-export const InputSchema = z.object({
-  companyId: z.uuid(),
-  conversationId: z.uuid(),
-});
+export const ProcessInboundMessageInputSchema = ProcessInboundMessageBodySchema;
 
-export const OutputSchema = z.object({
+export const ConversationContextOutputSchema = z.object({
   context: z.object({
     company: z.object({
       id: z.uuid(),
@@ -45,5 +46,17 @@ export const OutputSchema = z.object({
   }),
 });
 
-export type ConversationContextToolInput = z.infer<typeof InputSchema>;
-export type ConversationContextToolOutput = z.infer<typeof OutputSchema>;
+export const ProcessOutboundMessageInputSchema =
+  ProcessOutboundMessageBodySchema;
+
+export const ProcessOutboundMessageResultSchema = z.object({
+  customerId: z.uuid(),
+  companyId: z.uuid(),
+  companyName: z.string(),
+  conversationId: z.uuid(),
+  messageId: z.uuid(),
+});
+
+export const ProcessOutboundMessageOutputSchema = z.object({
+  result: ProcessOutboundMessageResultSchema,
+});
