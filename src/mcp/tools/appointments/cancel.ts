@@ -3,14 +3,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "../../context.js";
 import { ok } from "../../result.js";
 import { toMcpErrorResult } from "../../errorMapper.js";
-import { AppointmentOutputSchema } from "./types.js";
+import { CustomerAppointmentSchema } from "./types.js";
 
 const InputSchema = z.object({
   companyId: z.uuid(),
   appointmentId: z.uuid(),
 });
 
-const OutputSchema = AppointmentOutputSchema;
+const OutputSchema = CustomerAppointmentSchema;
 
 export function registerCancelAppointmentTool(
   server: McpServer,
@@ -35,7 +35,12 @@ export function registerCancelAppointmentTool(
           args.companyId,
           args.appointmentId,
         );
-        return ok({ appointment });
+        return ok({
+          id: appointment.id,
+          startAtUtc: appointment.startAtUtc,
+          endAtUtc: appointment.endAtUtc,
+          status: appointment.status,
+        });
       } catch (error) {
         return toMcpErrorResult(error);
       }

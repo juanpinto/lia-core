@@ -94,7 +94,7 @@ export async function listExistingProductIds(
     `select id
      from public.products
      where company_id = $1
-       and id = any($2::uuid[])`,
+       and id::text = any($2::text[])`,
     [companyId, productIds],
   );
 

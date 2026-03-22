@@ -183,6 +183,7 @@ export async function listAppointmentsForCustomer(
      inner join public.company_customers cc
        on cc.id = a.company_customer_id
      where cc.customer_id = $1
+       and a.status = 'scheduled'
      order by a.start_at_utc desc`,
     [customerId],
   );
@@ -205,6 +206,7 @@ export async function listUpcomingAppointmentsForCompanyCustomer(
      from public.appointments
      where company_id = $1
        and company_customer_id = $2
+       and status = 'scheduled'
        and start_at_utc >= now()
      order by start_at_utc desc
      limit $3`,

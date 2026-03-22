@@ -5,7 +5,7 @@ import { ok } from "../../result.js";
 import { toMcpErrorResult } from "../../errorMapper.js";
 import {
   AppointmentItemInputSchema,
-  AppointmentOutputSchema,
+  CustomerAppointmentSchema,
 } from "./types.js";
 
 const InputSchema = z.object({
@@ -19,7 +19,7 @@ const InputSchema = z.object({
   items: z.array(AppointmentItemInputSchema).min(1),
 });
 
-export const OutputSchema = AppointmentOutputSchema;
+export const OutputSchema = CustomerAppointmentSchema;
 
 export function registerCreateAppointmentTool(
   server: McpServer,
@@ -50,7 +50,12 @@ export function registerCreateAppointmentTool(
           },
         );
 
-        return ok({ appointment });
+        return ok({
+          id: appointment.id,
+          startAtUtc: appointment.startAtUtc,
+          endAtUtc: appointment.endAtUtc,
+          status: appointment.status,
+        });
       } catch (error) {
         return toMcpErrorResult(error);
       }
