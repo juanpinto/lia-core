@@ -9,6 +9,7 @@ import { registerCancelAppointmentTool } from "./tools/appointments/cancel.js";
 import { registerRescheduleAppointmentTool } from "./tools/appointments/reschedule.js";
 import { registerProcessInboundMessageTool } from "./tools/conversations/processInboundMessage.js";
 import { registerProcessOutboundMessageTool } from "./tools/conversations/processOutboundMessage.js";
+import { registerSavePendingActionTool } from "./tools/conversations/savePendingAction.js";
 
 export function createLiaCoreMcpServer(): McpServer {
   const server = new McpServer(
@@ -30,6 +31,7 @@ export function createLiaCoreMcpServer(): McpServer {
   registerSearchProductsTool(server, ctx);
   registerProcessInboundMessageTool(server, ctx);
   registerProcessOutboundMessageTool(server, ctx);
+  registerSavePendingActionTool(server, ctx);
   registerListAppointmentsTool(server, ctx);
   registerCreateAppointmentTool(server, ctx);
   registerCancelAppointmentTool(server, ctx);

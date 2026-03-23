@@ -5,7 +5,6 @@ import type { ResolvePendingActionBodySchema } from './schemas.js';
 
 export interface CreatePendingActionInput {
   conversationId: string;
-  companyCustomerId: string;
   actionType: string;
   payload: Record<string, unknown>;
 }
@@ -58,10 +57,54 @@ export async function insertPendingAction(companyId: string, input: CreatePendin
   const result = await pool.query(
     `insert into public.pending_actions
       (company_id, conversation_id, company_customer_id, action_type, payload)
-     values ($1, $2, $3, $4, $5)
+     select $1, c.id, c.company_customer_id, $3, $4
+     from public.conversations c
+     where c.company_id = $1
+       and c.id = $2
      returning *`,
-    [companyId, input.conversationId, input.companyCustomerId, input.actionType, input.payload],
+    [companyId, input.conversationId, input.actionType, input.payload],
   );
+
+  if (!result.rowCount) {
+    throw new NotFoundError(
+      `Conversation ${input.conversationId} was not found for company ${companyId}.`,
+    );
+  }
+
+  return mapRow(result.rows[0]!);
+}
+
+export async function savePendingAction(
+  companyId: string,
+  input: CreatePendingActionInput,
+): Promise<PendingActionRecord> {
+  const result = await pool.query(
+    `insert into public.pending_actions
+      (company_id, conversation_id, company_customer_id, action_type, payload)
+     select $1, c.id, c.company_customer_id, $3, $4
+     from public.conversations c
+     where c.company_id = $1
+       and c.id = $2
+     on conflict (conversation_id)
+       where status = 'pending'
+     do update
+       set action_type = excluded.action_type,
+           payload = excluded.payload
+     returning *`,
+    [
+      companyId,
+      input.conversationId,
+      input.actionType,
+      input.payload,
+    ],
+  );
+
+  if (!result.rowCount) {
+    throw new NotFoundError(
+      `Conversation ${input.conversationId} was not found for company ${companyId}.`,
+    );
+  }
+
   return mapRow(result.rows[0]!);
 }
 

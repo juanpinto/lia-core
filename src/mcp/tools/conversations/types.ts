@@ -48,6 +48,27 @@ export const ConversationContextOutputSchema = z.object({
 export const ProcessOutboundMessageInputSchema =
   ProcessOutboundMessageBodySchema;
 
+export const SavePendingActionInputSchema = z.object({
+  companyId: z.uuid(),
+  conversationId: z.uuid(),
+  actionType: z.string().trim().min(1).max(100),
+  payload: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const SavePendingActionResultSchema = z.object({
+  id: z.uuid(),
+  conversationId: z.uuid(),
+  actionType: z.string(),
+  status: z.enum(["pending", "resolved", "expired", "cancelled"]),
+  payload: z.record(z.string(), z.unknown()),
+  createdAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+
+export const SavePendingActionOutputSchema = z.object({
+  pendingAction: SavePendingActionResultSchema,
+});
+
 export const ProcessOutboundMessageResultSchema = z.object({
   customerId: z.uuid(),
   companyId: z.uuid(),

@@ -7,6 +7,7 @@ import {
   processInboundMessage,
   processOutboundMessage,
 } from "../modules/conversations/service.js";
+import { savePendingActionService } from "../modules/pending-actions/service.js";
 import {
   cancelAppointmentService,
   createAppointmentForCustomerService,
@@ -25,6 +26,7 @@ export type McpContext = {
   conversations: {
     processInboundMessage: typeof processInboundMessage;
     processOutboundMessage: typeof processOutboundMessage;
+    savePendingAction: typeof savePendingActionService;
   };
   appointments: {
     createAppointment: typeof createAppointmentForCustomerService;
@@ -46,6 +48,7 @@ export function createMcpContext(): McpContext {
     conversations: {
       processInboundMessage,
       processOutboundMessage,
+      savePendingAction: savePendingActionService,
     },
     appointments: {
       createAppointment: createAppointmentForCustomerService,

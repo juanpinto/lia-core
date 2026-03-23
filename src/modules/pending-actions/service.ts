@@ -1,6 +1,5 @@
 import { NotFoundError } from '../../lib/errors.js';
-import { getConversation } from '../conversations/repository.js';
-import { getPendingAction, insertPendingAction, listPendingActions, resolvePendingAction } from './repository.js';
+import { getPendingAction, insertPendingAction, listPendingActions, resolvePendingAction, savePendingAction } from './repository.js';
 import type { z } from 'zod';
 import type { CreatePendingActionBodySchema, ResolvePendingActionBodySchema } from './schemas.js';
 
@@ -8,14 +7,16 @@ type CreateInput = z.infer<typeof CreatePendingActionBodySchema>;
 type ResolveInput = z.infer<typeof ResolvePendingActionBodySchema>;
 
 export async function createPendingActionService(companyId: string, input: CreateInput) {
-  const conversation = await getConversation(companyId, input.conversationId);
-  if (!conversation) {
-    throw new NotFoundError(`Conversation ${input.conversationId} was not found for company ${companyId}.`);
-  }
-
   return insertPendingAction(companyId, {
     conversationId: input.conversationId,
-    companyCustomerId: conversation.companyCustomerId,
+    actionType: input.actionType,
+    payload: input.payload,
+  });
+}
+
+export async function savePendingActionService(companyId: string, input: CreateInput) {
+  return savePendingAction(companyId, {
+    conversationId: input.conversationId,
     actionType: input.actionType,
     payload: input.payload,
   });
