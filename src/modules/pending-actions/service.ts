@@ -16,10 +16,8 @@ export async function createPendingActionService(companyId: string, input: Creat
   return insertPendingAction(companyId, {
     conversationId: input.conversationId,
     companyCustomerId: conversation.companyCustomerId,
-    channel: conversation.channel,
     actionType: input.actionType,
     payload: input.payload,
-    expiresAt: input.expiresAt ?? null,
   });
 }
 

@@ -17,7 +17,6 @@ export const PendingActionSchema = z.object({
   actionType: z.string(),
   payload: z.record(z.string(), z.unknown()),
   createdAt: z.iso.datetime({ offset: true }),
-  expiresAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 export const ProcessInboundMessageInputSchema = ProcessInboundMessageBodySchema;

@@ -7,7 +7,6 @@ export const CreatePendingActionBodySchema = z.object({
   conversationId: z.uuid(),
   actionType: z.string().trim().min(1).max(100),
   payload: z.record(z.string(), z.unknown()).default({}),
-  expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
 });
 
 export const ResolvePendingActionBodySchema = z.object({

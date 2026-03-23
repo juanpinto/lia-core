@@ -69,7 +69,6 @@ export interface ConversationContextForBrain {
     actionType: string;
     payload: Record<string, unknown>;
     createdAt: string;
-    expiresAt: string | null;
   } | null;
 }
 
@@ -233,7 +232,6 @@ async function getConversationContext(
           actionType: pendingAction.actionType,
           payload: pendingAction.payload,
           createdAt: pendingAction.createdAt,
-          expiresAt: pendingAction.expiresAt,
         }
       : null,
   };

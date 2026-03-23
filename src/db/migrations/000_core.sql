@@ -234,23 +234,13 @@ create table if not exists public.pending_actions (
   company_id uuid not null references public.companies(id) on delete cascade,
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   company_customer_id uuid not null references public.company_customers(id) on delete cascade,
-  channel text not null,
   action_type text not null,
   status text not null default 'pending',
   payload jsonb not null default '{}'::jsonb,
-  expires_at timestamptz null,
-  resolved_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint pending_actions_channel_check check (
-    channel = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
-  ),
   constraint pending_actions_status_check check (
     status = any (array['pending'::text, 'resolved'::text, 'expired'::text, 'cancelled'::text])
-  ),
-  constraint pending_actions_resolved_consistency_check check (
-    (status = 'pending' and resolved_at is null) or
-    (status <> 'pending' and resolved_at is not null)
   ),
   constraint pending_actions_conversation_company_fk foreign key (company_id, conversation_id)
     references public.conversations(company_id, id) on delete cascade,
