@@ -65,9 +65,7 @@ export const SavePendingActionResultSchema = z.object({
   updatedAt: z.iso.datetime({ offset: true }),
 });
 
-export const SavePendingActionOutputSchema = z.object({
-  pendingAction: SavePendingActionResultSchema,
-});
+export const SavePendingActionOutputSchema = SavePendingActionResultSchema;
 
 export const ProcessOutboundMessageResultSchema = z.object({
   customerId: z.uuid(),

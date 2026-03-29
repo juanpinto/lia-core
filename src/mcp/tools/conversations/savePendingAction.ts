@@ -36,15 +36,13 @@ export function registerSavePendingActionTool(
         );
 
         return ok({
-          pendingAction: {
-            id: pendingAction.id,
-            conversationId: pendingAction.conversationId,
-            actionType: pendingAction.actionType,
-            status: pendingAction.status,
-            payload: pendingAction.payload,
-            createdAt: pendingAction.createdAt,
-            updatedAt: pendingAction.updatedAt,
-          },
+          id: pendingAction.id,
+          conversationId: pendingAction.conversationId,
+          actionType: pendingAction.actionType,
+          status: pendingAction.status,
+          payload: pendingAction.payload,
+          createdAt: pendingAction.createdAt,
+          updatedAt: pendingAction.updatedAt,
         });
       } catch (error) {
         return toMcpErrorResult(error);
