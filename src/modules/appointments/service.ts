@@ -3,6 +3,7 @@ import {
   cancelAppointment,
   createAppointment,
   getAppointment,
+  listAppointmentsForCompany,
   listAppointmentsForCustomer,
   listAppointmentsForCompanyCustomer,
   rescheduleAppointment,
@@ -77,6 +78,13 @@ export async function getAppointmentOrThrow(
     );
   }
   return appointment;
+}
+
+export async function listCompanyAppointmentsService(
+  companyId: string,
+  filters: { status?: string | undefined; limit?: number | undefined; offset?: number | undefined } = {},
+) {
+  return listAppointmentsForCompany(companyId, filters);
 }
 
 export async function listCompanyCustomerAppointmentsService(

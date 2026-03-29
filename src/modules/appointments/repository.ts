@@ -12,6 +12,9 @@ export interface AppointmentItemRecord {
   productId: string;
   quantity: number;
   notes: string | null;
+  productName: string;
+  productPrice: number;
+  productDurationMinutes: number;
 }
 
 export interface AppointmentRecord {
@@ -27,6 +30,10 @@ export interface AppointmentRecord {
   createdAt: string;
   updatedAt: string;
   items: AppointmentItemRecord[];
+  customer: {
+    name: string | null;
+    platformUserId: string;
+  } | null;
 }
 
 export interface UpcomingAppointmentContextRecord {
@@ -45,6 +52,9 @@ function mapAppointmentItem(
     productId: String(row.product_id),
     quantity: Number(row.quantity),
     notes: (row.notes as string | null) ?? null,
+    productName: String(row.product_name ?? ""),
+    productPrice: Number(row.product_price ?? 0),
+    productDurationMinutes: Number(row.product_duration_minutes ?? 0),
   };
 }
 
@@ -77,6 +87,12 @@ function mapAppointment(
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
     items,
+    customer: row.customer_name !== undefined || row.customer_platform_user_id !== undefined
+      ? {
+          name: (row.customer_name as string | null) ?? null,
+          platformUserId: String(row.customer_platform_user_id ?? ""),
+        }
+      : null,
   };
 }
 
@@ -101,10 +117,13 @@ async function getItems(
   appointmentId: string,
 ): Promise<AppointmentItemRecord[]> {
   const result = await client.query(
-    `select id, product_id, quantity, notes
-     from public.appointment_products
-     where appointment_id = $1
-     order by created_at asc`,
+    `select ap.id, ap.product_id, ap.quantity, ap.notes,
+            p.name as product_name, p.price as product_price,
+            p.duration_minutes as product_duration_minutes
+     from public.appointment_products ap
+     inner join public.products p on p.id = ap.product_id
+     where ap.appointment_id = $1
+     order by ap.created_at asc`,
     [appointmentId],
   );
   return result.rows.map(mapAppointmentItem);
@@ -152,6 +171,33 @@ export async function getAppointment(
   }
   const items = await getItems(pool, appointmentId);
   return mapAppointment(result.rows[0]!, items);
+}
+
+export async function listAppointmentsForCompany(
+  companyId: string,
+  filters: { status?: string | undefined; limit?: number | undefined; offset?: number | undefined } = {},
+): Promise<AppointmentRecord[]> {
+  const { status, limit = 50, offset = 0 } = filters;
+  const result = await pool.query(
+    `select a.*,
+            cu.name as customer_name,
+            cu.platform_user_id as customer_platform_user_id
+     from public.appointments a
+     inner join public.company_customers cc on cc.id = a.company_customer_id
+     inner join public.customers cu on cu.id = cc.customer_id
+     where a.company_id = $1
+       and ($2::text is null or a.status = $2)
+     order by a.start_at_utc desc
+     limit $3 offset $4`,
+    [companyId, status ?? null, limit, offset],
+  );
+
+  const appointments: AppointmentRecord[] = [];
+  for (const row of result.rows) {
+    const items = await getItems(pool, String(row.id));
+    appointments.push(mapAppointment(row, items));
+  }
+  return appointments;
 }
 
 export async function listAppointmentsForCompanyCustomer(

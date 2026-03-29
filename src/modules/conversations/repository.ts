@@ -13,6 +13,10 @@ export interface ConversationRecord {
   startedAt: string;
   createdAt: string;
   updatedAt: string;
+  customer: {
+    name: string | null;
+    platformUserId: string;
+  } | null;
 }
 
 export interface ConversationContextBaseRecord {
@@ -64,6 +68,12 @@ function mapConversationRow(row: Record<string, unknown>): ConversationRecord {
     startedAt: new Date(String(row.started_at)).toISOString(),
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
+    customer: row.customer_name !== undefined || row.customer_platform_user_id !== undefined
+      ? {
+          name: (row.customer_name as string | null) ?? null,
+          platformUserId: String(row.customer_platform_user_id ?? ""),
+        }
+      : null,
   };
 }
 
@@ -135,6 +145,42 @@ export async function getConversationContextBase(
     startedAt: new Date(String(row.started_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
+}
+
+export async function listConversationsForCompany(
+  companyId: string,
+  filters: { status?: string | undefined; limit?: number | undefined; offset?: number | undefined } = {},
+): Promise<ConversationRecord[]> {
+  const { status, limit = 50, offset = 0 } = filters;
+  const result = await pool.query(
+    `select c.*,
+            cu.name as customer_name,
+            cu.platform_user_id as customer_platform_user_id
+     from public.conversations c
+     inner join public.company_customers cc on cc.id = c.company_customer_id
+     inner join public.customers cu on cu.id = cc.customer_id
+     where c.company_id = $1
+       and ($2::text is null or c.status = $2)
+     order by c.updated_at desc
+     limit $3 offset $4`,
+    [companyId, status ?? null, limit, offset],
+  );
+  return result.rows.map(mapConversationRow);
+}
+
+export async function listConversationMessages(
+  companyId: string,
+  conversationId: string,
+): Promise<ConversationContextMessageRecord[]> {
+  const result = await pool.query(
+    `select id, direction, role, body, created_at
+     from public.messages
+     where company_id = $1
+       and conversation_id = $2
+     order by created_at asc`,
+    [companyId, conversationId],
+  );
+  return result.rows.map(mapConversationContextMessageRow);
 }
 
 export async function getConversation(

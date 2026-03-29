@@ -29,3 +29,15 @@ export class ValidationError extends AppError {
     super(400, 'VALIDATION_ERROR', message, details);
   }
 }
+
+export class UnauthorizedError extends AppError {
+  public constructor(message = 'Missing or invalid credentials.') {
+    super(401, 'UNAUTHORIZED', message);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  public constructor(message = 'Access denied.') {
+    super(403, 'FORBIDDEN', message);
+  }
+}

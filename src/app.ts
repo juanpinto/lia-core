@@ -6,6 +6,7 @@ import { logger } from './config/logger.js';
 import { requestContext } from './lib/request-context.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { registerRoutes } from './routes/index.js';
+import { registerDashboardRoutes } from './routes/dashboard.js';
 
 export function createApp() {
   const app = express();
@@ -17,6 +18,7 @@ export function createApp() {
   app.use(requestContext);
   app.use(pinoHttp({ logger, customProps: (req: { requestId?: string }) => ({ requestId: req.requestId }) }));
 
+  registerDashboardRoutes(app);
   registerRoutes(app);
   app.use(errorHandler);
 

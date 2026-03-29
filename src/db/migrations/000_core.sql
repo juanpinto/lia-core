@@ -258,6 +258,23 @@ create unique index if not exists pending_actions_active_per_conversation_uidx
 on public.pending_actions using btree (conversation_id)
 where status = 'pending';
 
+create table if not exists public.company_users (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.companies(id) on delete cascade,
+  email text not null,
+  password_hash text not null,
+  role text not null default 'admin',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint company_users_email_unique unique (email),
+  constraint company_users_role_check check (
+    role = any (array['admin'::text, 'member'::text])
+  )
+);
+
+create index if not exists company_users_company_idx
+on public.company_users using btree (company_id);
+
 create trigger companies_set_updated_at before update on public.companies for each row execute function public.set_updated_at();
 create trigger channel_accounts_set_updated_at before update on public.channel_accounts for each row execute function public.set_updated_at();
 create trigger customers_set_updated_at before update on public.customers for each row execute function public.set_updated_at();
@@ -267,3 +284,4 @@ create trigger products_set_updated_at before update on public.products for each
 create trigger appointments_set_updated_at before update on public.appointments for each row execute function public.set_updated_at();
 create trigger appointment_products_set_updated_at before update on public.appointment_products for each row execute function public.set_updated_at();
 create trigger pending_actions_set_updated_at before update on public.pending_actions for each row execute function public.set_updated_at();
+create trigger company_users_set_updated_at before update on public.company_users for each row execute function public.set_updated_at();

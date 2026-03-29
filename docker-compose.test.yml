@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: lia_core_test
+      POSTGRES_USER: lia_test
+      POSTGRES_PASSWORD: lia_test_password
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lia_test -d lia_core_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10

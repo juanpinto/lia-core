@@ -8,6 +8,12 @@ declare global {
       serviceAuth?: {
         service: "internal" | "gateway";
       };
+      dashboardUser?: {
+        userId: string;
+        companyId: string;
+        email: string;
+        role: "admin" | "member";
+      };
     }
   }
 }

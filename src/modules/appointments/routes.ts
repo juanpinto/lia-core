@@ -5,6 +5,7 @@ import { validateRequest } from "../../lib/validate.js";
 import {
   cancelAppointmentService,
   getAppointmentOrThrow,
+  listCompanyAppointmentsService,
   listCompanyCustomerAppointmentsService,
   rescheduleAppointmentService,
 } from "./service.js";
@@ -15,8 +16,27 @@ import {
   CompanyParamsSchema,
   RescheduleAppointmentBodySchema,
 } from "./schemas.js";
+import { z } from "zod";
+
+const ListAppointmentsQuerySchema = z.object({
+  status: z.enum(["scheduled", "cancelled", "completed", "no_show"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
 
 export const appointmentsRouter = Router({ mergeParams: true });
+
+appointmentsRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const { params, query } = validateRequest(req, {
+      params: CompanyParamsSchema,
+      query: ListAppointmentsQuerySchema,
+    });
+    const appointments = await listCompanyAppointmentsService(params.companyId, query);
+    ok(res, appointments);
+  }),
+);
 
 appointmentsRouter.get(
   "/:appointmentId",
