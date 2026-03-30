@@ -15,7 +15,7 @@ FROM base AS runtime
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 COPY --from=build --chown=node:node /app/dist ./dist
 RUN chown -R node:node /app
