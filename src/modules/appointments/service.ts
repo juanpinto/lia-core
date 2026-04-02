@@ -26,7 +26,7 @@ export async function createAppointmentForCustomerService(
 ) {
   const company = await findCompanyById(companyId);
   if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
-  const startAt = new Date(localToUtcIso(input.startAtLocal, company.timezone));
+  const startAt = new Date(localToUtcIso(input.startAt, company.timezone));
 
   const companyCustomerId = await getCompanyCustomerIdForCustomerOrThrow(
     companyId,
@@ -55,8 +55,8 @@ export async function createAppointmentForCustomerService(
   return createAppointment(companyId, {
     companyCustomerId,
     conversationId: input.conversationId ?? null,
-    startAtUtc: startAt.toISOString(),
-    endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
+    startAt: startAt.toISOString(),
+    endAt: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
     createdVia: input.createdVia,
     notes: input.notes ?? null,
     items: input.items,
@@ -108,11 +108,11 @@ export async function rescheduleAppointmentService(
 ) {
   const company = await findCompanyById(companyId);
   if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
-  const startAt = new Date(localToUtcIso(input.startAtLocal, company.timezone));
+  const startAt = new Date(localToUtcIso(input.startAt, company.timezone));
 
   return rescheduleAppointment(companyId, appointmentId, {
-    startAtUtc: startAt.toISOString(),
-    endAtUtc: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
+    startAt: startAt.toISOString(),
+    endAt: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
     createdVia: input.createdVia,
     notes: input.notes ?? null,
   });

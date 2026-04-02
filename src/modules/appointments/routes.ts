@@ -92,7 +92,7 @@ appointmentsRouter.post(
       params.companyId,
       params.appointmentId,
       {
-        startAtLocal: body.startAtUtc,
+        startAt: body.startAt,
         createdVia: body.createdVia,
         notes: body.notes,
       },

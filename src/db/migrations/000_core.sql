@@ -143,8 +143,8 @@ create table if not exists public.appointments (
   company_id uuid not null references public.companies(id) on delete cascade,
   company_customer_id uuid not null references public.company_customers(id) on delete cascade,
   conversation_id uuid null references public.conversations(id) on delete set null,
-  start_at_utc timestamptz not null,
-  end_at_utc timestamptz not null,
+  start_at timestamptz not null,
+  end_at timestamptz not null,
   status text not null default 'scheduled',
   created_via text not null default 'whatsapp',
   notes text null,
@@ -156,7 +156,7 @@ create table if not exists public.appointments (
   constraint appointments_created_via_check check (
     created_via = any (array['whatsapp'::text, 'instagram'::text, 'web'::text, 'manual'::text])
   ),
-  constraint appointments_time_range_check check (end_at_utc > start_at_utc),
+  constraint appointments_time_range_check check (end_at > start_at),
   constraint appointments_company_id_id_unique unique (company_id, id),
   constraint appointments_company_customer_company_fk foreign key (company_id, company_customer_id)
     references public.company_customers(company_id, id) on delete cascade,
@@ -165,10 +165,10 @@ create table if not exists public.appointments (
 );
 
 create index if not exists appointments_company_start_idx
-on public.appointments using btree (company_id, start_at_utc);
+on public.appointments using btree (company_id, start_at);
 
 create index if not exists appointments_company_customer_status_start_idx
-on public.appointments using btree (company_id, company_customer_id, status, start_at_utc);
+on public.appointments using btree (company_id, company_customer_id, status, start_at);
 
 create table if not exists public.appointment_products (
   id uuid primary key default gen_random_uuid(),

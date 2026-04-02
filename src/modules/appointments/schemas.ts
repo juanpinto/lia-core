@@ -19,8 +19,8 @@ const AppointmentProductInputSchema = z.object({
 export const CreateAppointmentBodySchema = z.object({
   companyCustomerId: z.uuid(),
   conversationId: z.uuid().nullable().optional(),
-  startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
+  startAt: z.iso.datetime({ offset: true }),
+  endAt: z.iso.datetime({ offset: true }),
   createdVia: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
@@ -33,8 +33,8 @@ export const CancelAppointmentBodySchema = z.object({
 });
 
 export const RescheduleAppointmentBodySchema = z.object({
-  startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
+  startAt: z.iso.datetime({ offset: true }),
+  endAt: z.iso.datetime({ offset: true }),
   createdVia: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("manual"),
@@ -44,8 +44,8 @@ export const RescheduleAppointmentBodySchema = z.object({
 export const CreateCustomerAppointmentBodySchema = z.object({
   customerId: z.uuid(),
   conversationId: z.uuid().nullable().optional(),
-  startAtUtc: z.iso.datetime({ offset: true }),
-  endAtUtc: z.iso.datetime({ offset: true }),
+  startAt: z.iso.datetime({ offset: true }),
+  endAt: z.iso.datetime({ offset: true }),
   createdVia: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),

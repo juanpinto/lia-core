@@ -12,7 +12,7 @@ const InputSchema = z.object({
   companyId: z.uuid(),
   customerId: z.uuid(),
   conversationId: z.uuid().nullable().optional(),
-  startAtLocal: z.string().min(1),
+  startAt: z.string().min(1),
   channel: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("whatsapp"),
@@ -44,7 +44,7 @@ export function registerCreateAppointmentTool(
           {
             customerId: args.customerId,
             conversationId: args.conversationId ?? null,
-            startAtLocal: args.startAtLocal,
+            startAt: args.startAt,
             createdVia: args.channel,
             items: args.items,
           },
@@ -52,8 +52,8 @@ export function registerCreateAppointmentTool(
 
         return ok({
           id: appointment.id,
-          startAtUtc: appointment.startAtUtc,
-          endAtUtc: appointment.endAtUtc,
+          startAt: appointment.startAt,
+          endAt: appointment.endAt,
           status: appointment.status,
         });
       } catch (error) {

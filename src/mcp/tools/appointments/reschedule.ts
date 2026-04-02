@@ -8,7 +8,7 @@ import { AppointmentOutputSchema } from "./types.js";
 const InputSchema = z.object({
   companyId: z.uuid(),
   appointmentId: z.uuid(),
-  startAtLocal: z.string().min(1),
+  startAt: z.string().min(1),
   createdVia: z
     .enum(["whatsapp", "instagram", "web", "manual"])
     .default("manual"),
@@ -40,7 +40,7 @@ export function registerRescheduleAppointmentTool(
           args.companyId,
           args.appointmentId,
           {
-            startAtLocal: args.startAtLocal,
+            startAt: args.startAt,
             createdVia: args.createdVia,
             notes: args.notes ?? null,
           },

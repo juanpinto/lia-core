@@ -22,8 +22,8 @@ export interface AppointmentRecord {
   companyId: string;
   companyCustomerId: string;
   conversationId: string | null;
-  startAtUtc: string;
-  endAtUtc: string;
+  startAt: string;
+  endAt: string;
   status: "scheduled" | "cancelled" | "completed" | "no_show";
   createdVia: "whatsapp" | "instagram" | "web" | "manual";
   notes: string | null;
@@ -39,8 +39,8 @@ export interface AppointmentRecord {
 export interface UpcomingAppointmentContextRecord {
   id: string;
   status: string;
-  startAtUtc: string;
-  endAtUtc: string;
+  startAt: string;
+  endAt: string;
   notes: string | null;
 }
 
@@ -64,8 +64,8 @@ function mapUpcomingContextRow(
   return {
     id: String(row.id),
     status: String(row.status),
-    startAtUtc: new Date(String(row.start_at_utc)).toISOString(),
-    endAtUtc: new Date(String(row.end_at_utc)).toISOString(),
+    startAt: new Date(String(row.start_at)).toISOString(),
+    endAt: new Date(String(row.end_at)).toISOString(),
     notes: (row.notes as string | null) ?? null,
   };
 }
@@ -79,8 +79,8 @@ function mapAppointment(
     companyId: String(row.company_id),
     companyCustomerId: String(row.company_customer_id),
     conversationId: (row.conversation_id as string | null) ?? null,
-    startAtUtc: new Date(String(row.start_at_utc)).toISOString(),
-    endAtUtc: new Date(String(row.end_at_utc)).toISOString(),
+    startAt: new Date(String(row.start_at)).toISOString(),
+    endAt: new Date(String(row.end_at)).toISOString(),
     status: row.status as AppointmentRecord["status"],
     createdVia: row.created_via as AppointmentRecord["createdVia"],
     notes: (row.notes as string | null) ?? null,
@@ -136,15 +136,15 @@ export async function createAppointment(
   return withTransaction(async (client) => {
     const appointmentResult = await client.query(
       `insert into public.appointments
-        (company_id, company_customer_id, conversation_id, start_at_utc, end_at_utc, created_via, notes)
+        (company_id, company_customer_id, conversation_id, start_at, end_at, created_via, notes)
        values ($1, $2, $3, $4, $5, $6, $7)
        returning *`,
       [
         companyId,
         input.companyCustomerId,
         input.conversationId,
-        input.startAtUtc,
-        input.endAtUtc,
+        input.startAt,
+        input.endAt,
         input.createdVia,
         input.notes ?? null,
       ],
@@ -187,7 +187,7 @@ export async function listAppointmentsForCompany(
      inner join public.customers cu on cu.id = cc.customer_id
      where a.company_id = $1
        and ($2::text is null or a.status = $2)
-     order by a.start_at_utc desc
+     order by a.start_at desc
      limit $3 offset $4`,
     [companyId, status ?? null, limit, offset],
   );
@@ -208,7 +208,7 @@ export async function listAppointmentsForCompanyCustomer(
     `select *
      from public.appointments
      where company_id = $1 and company_customer_id = $2
-     order by start_at_utc desc`,
+     order by start_at desc`,
     [companyId, companyCustomerId],
   );
 
@@ -230,7 +230,7 @@ export async function listAppointmentsForCustomer(
        on cc.id = a.company_customer_id
      where cc.customer_id = $1
        and a.status = 'scheduled'
-     order by a.start_at_utc desc`,
+     order by a.start_at desc`,
     [customerId],
   );
 
@@ -248,13 +248,13 @@ export async function listUpcomingAppointmentsForCompanyCustomer(
   limit = 10,
 ): Promise<UpcomingAppointmentContextRecord[]> {
   const result = await pool.query(
-    `select id, status, start_at_utc, end_at_utc, notes
+    `select id, status, start_at, end_at, notes
      from public.appointments
      where company_id = $1
        and company_customer_id = $2
        and status = 'scheduled'
-       and start_at_utc >= now()
-     order by start_at_utc desc
+       and start_at >= now()
+     order by start_at desc
      limit $3`,
     [companyId, companyCustomerId, limit],
   );
@@ -289,8 +289,8 @@ export async function rescheduleAppointment(
 ): Promise<AppointmentRecord> {
   const result = await pool.query(
     `update public.appointments
-     set start_at_utc = $3,
-         end_at_utc = $4,
+     set start_at = $3,
+         end_at = $4,
          status = 'scheduled',
          created_via = $5,
          notes = coalesce($6, notes)
@@ -299,8 +299,8 @@ export async function rescheduleAppointment(
     [
       companyId,
       appointmentId,
-      input.startAtUtc,
-      input.endAtUtc,
+      input.startAt,
+      input.endAt,
       input.createdVia,
       input.notes ?? null,
     ],
