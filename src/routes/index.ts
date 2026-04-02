@@ -6,7 +6,6 @@ import { channelAccountsRouter } from "../modules/channel-accounts/routes.js";
 import { customersRouter } from "../modules/customers/routes.js";
 import { productsRouter } from "../modules/products/routes.js";
 import { appointmentsRouter } from "../modules/appointments/routes.js";
-import { pendingActionsRouter } from "../modules/pending-actions/routes.js";
 
 export function registerRoutes(app: Express): void {
   const internalApiRouter = Router();
@@ -18,10 +17,9 @@ export function registerRoutes(app: Express): void {
   );
   internalApiRouter.use("/companies/:companyId/customers", customersRouter);
   internalApiRouter.use("/companies/:companyId/products", productsRouter);
-  internalApiRouter.use("/companies/:companyId/appointments", appointmentsRouter);
   internalApiRouter.use(
-    "/companies/:companyId/pending-actions",
-    pendingActionsRouter,
+    "/companies/:companyId/appointments",
+    appointmentsRouter,
   );
 
   app.use("/health", healthRouter);

@@ -91,7 +91,11 @@ appointmentsRouter.post(
     const appointment = await rescheduleAppointmentService(
       params.companyId,
       params.appointmentId,
-      body,
+      {
+        startAtLocal: body.startAtUtc,
+        createdVia: body.createdVia,
+        notes: body.notes,
+      },
     );
     ok(res, appointment);
   }),

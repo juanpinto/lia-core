@@ -11,6 +11,8 @@ import {
 import { getConversation } from "../conversations/repository.js";
 import { getCompanyCustomerIdForCustomerOrThrow } from "../customers/service.js";
 import { assertCompanyProductsExist } from "../products/service.js";
+import { findCompanyById } from "../companies/repository.js";
+import { localToUtcIso } from "../../lib/dates.js";
 import type {
   CreateAppointmentForCustomerInput,
   RescheduleAppointmentServiceInput,
@@ -18,19 +20,13 @@ import type {
 
 const DEFAULT_APPOINTMENT_DURATION_MS = 60 * 60 * 1000;
 
-function parseDateOrThrow(value: string, fieldName: string): Date {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    throw new ValidationError(`Invalid ${fieldName} value: ${value}.`);
-  }
-  return date;
-}
-
 export async function createAppointmentForCustomerService(
   companyId: string,
   input: CreateAppointmentForCustomerInput,
 ) {
-  const startAt = parseDateOrThrow(input.startAtUtc, "startAtUtc");
+  const company = await findCompanyById(companyId);
+  if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
+  const startAt = new Date(localToUtcIso(input.startAtLocal, company.timezone));
 
   const companyCustomerId = await getCompanyCustomerIdForCustomerOrThrow(
     companyId,
@@ -110,7 +106,9 @@ export async function rescheduleAppointmentService(
   appointmentId: string,
   input: RescheduleAppointmentServiceInput,
 ) {
-  const startAt = parseDateOrThrow(input.startAtUtc, "startAtUtc");
+  const company = await findCompanyById(companyId);
+  if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
+  const startAt = new Date(localToUtcIso(input.startAtLocal, company.timezone));
 
   return rescheduleAppointment(companyId, appointmentId, {
     startAtUtc: startAt.toISOString(),

@@ -2,7 +2,6 @@ import { NotFoundError } from "../../lib/errors.js";
 import { withTransaction } from "../../db/index.js";
 import { findCompanyByPlatformAccountId } from "../channel-accounts/repository.js";
 import { resolveCompanyCustomerIds } from "../customers/repository.js";
-import { getActivePendingActionForConversation } from "../pending-actions/repository.js";
 import {
   appendConversationSummaryPatch,
   createConversationForInbound,
@@ -64,12 +63,6 @@ export interface ConversationContextForBrain {
     body: string | null;
     createdAt: string;
   }>;
-  pendingAction: {
-    id: string;
-    actionType: string;
-    payload: Record<string, unknown>;
-    createdAt: string;
-  } | null;
 }
 
 async function persistInboundMessage(
@@ -202,10 +195,11 @@ async function getConversationContext(
     );
   }
 
-  const [conversationHistory, pendingAction] = await Promise.all([
-    listRecentConversationContextMessages(companyId, conversationId, 10),
-    getActivePendingActionForConversation(companyId, conversationId),
-  ]);
+  const conversationHistory = await listRecentConversationContextMessages(
+    companyId,
+    conversationId,
+    10,
+  );
 
   return {
     company: {
@@ -226,13 +220,5 @@ async function getConversationContext(
       updatedAt: base.updatedAt,
     },
     conversationHistory: [...conversationHistory].reverse(),
-    pendingAction: pendingAction
-      ? {
-          id: pendingAction.id,
-          actionType: pendingAction.actionType,
-          payload: pendingAction.payload,
-          createdAt: pendingAction.createdAt,
-        }
-      : null,
   };
 }

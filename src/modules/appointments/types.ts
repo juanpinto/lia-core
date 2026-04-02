@@ -13,7 +13,7 @@ export interface AppointmentItemInput {
 export interface CreateAppointmentForCustomerInput {
   customerId: string;
   conversationId?: string | null;
-  startAtUtc: string;
+  startAtLocal: string;
   createdVia: AppointmentCreatedVia;
   notes?: string | null | undefined;
   items: AppointmentItemInput[];
@@ -30,7 +30,7 @@ export interface CreateAppointmentRepositoryInput {
 }
 
 export interface RescheduleAppointmentServiceInput {
-  startAtUtc: string;
+  startAtLocal: string;
   endAtUtc?: string | undefined;
   createdVia: AppointmentCreatedVia;
   notes?: string | null | undefined;
