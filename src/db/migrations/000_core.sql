@@ -13,6 +13,8 @@ create table if not exists public.companies (
   name text not null,
   timezone text not null default 'America/New_York',
   metadata jsonb null,
+  address text null,
+  hours_of_operation jsonb null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -143,8 +145,8 @@ create table if not exists public.appointments (
   company_id uuid not null references public.companies(id) on delete cascade,
   company_customer_id uuid not null references public.company_customers(id) on delete cascade,
   conversation_id uuid null references public.conversations(id) on delete set null,
-  start_at timestamptz not null,
-  end_at timestamptz not null,
+  start_at timestamp not null,
+  end_at timestamp not null,
   status text not null default 'scheduled',
   created_via text not null default 'whatsapp',
   notes text null,

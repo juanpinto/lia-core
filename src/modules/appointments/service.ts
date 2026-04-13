@@ -12,7 +12,6 @@ import { getConversation } from "../conversations/repository.js";
 import { getCompanyCustomerIdForCustomerOrThrow } from "../customers/service.js";
 import { assertCompanyProductsExist } from "../products/service.js";
 import { findCompanyById } from "../companies/repository.js";
-import { localToUtcIso } from "../../lib/dates.js";
 import type {
   CreateAppointmentForCustomerInput,
   RescheduleAppointmentServiceInput,
@@ -26,7 +25,6 @@ export async function createAppointmentForCustomerService(
 ) {
   const company = await findCompanyById(companyId);
   if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
-  const startAt = new Date(localToUtcIso(input.startAt, company.timezone));
 
   const companyCustomerId = await getCompanyCustomerIdForCustomerOrThrow(
     companyId,
@@ -52,11 +50,14 @@ export async function createAppointmentForCustomerService(
     input.items.map((item) => item.productId),
   );
 
+  const endAt = new Date(new Date(input.startAt + 'Z').getTime() + DEFAULT_APPOINTMENT_DURATION_MS)
+    .toISOString();
+
   return createAppointment(companyId, {
     companyCustomerId,
     conversationId: input.conversationId ?? null,
-    startAt: startAt.toISOString(),
-    endAt: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
+    startAt: input.startAt,
+    endAt,
     createdVia: input.createdVia,
     notes: input.notes ?? null,
     items: input.items,
@@ -108,11 +109,13 @@ export async function rescheduleAppointmentService(
 ) {
   const company = await findCompanyById(companyId);
   if (!company) throw new NotFoundError(`Company ${companyId} not found.`);
-  const startAt = new Date(localToUtcIso(input.startAt, company.timezone));
+
+  const endAt = new Date(new Date(input.startAt + 'Z').getTime() + DEFAULT_APPOINTMENT_DURATION_MS)
+    .toISOString();
 
   return rescheduleAppointment(companyId, appointmentId, {
-    startAt: startAt.toISOString(),
-    endAt: new Date(startAt.getTime() + 60 * 60 * 1000).toISOString(),
+    startAt: input.startAt,
+    endAt,
     createdVia: input.createdVia,
     notes: input.notes ?? null,
   });

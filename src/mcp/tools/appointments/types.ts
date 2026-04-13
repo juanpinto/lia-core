@@ -18,8 +18,8 @@ export const AppointmentSchema = z.object({
   companyId: z.uuid(),
   companyCustomerId: z.uuid(),
   conversationId: z.uuid().nullable(),
-  startAt: z.iso.datetime({ offset: true }),
-  endAt: z.iso.datetime({ offset: true }),
+  startAt: z.iso.datetime({ local: true }),
+  endAt: z.iso.datetime({ local: true }),
   status: z.enum(["scheduled", "cancelled", "completed", "no_show"]),
   createdVia: z.enum(["whatsapp", "instagram", "web", "manual"]),
   notes: z.string().nullable(),
@@ -30,8 +30,8 @@ export const AppointmentSchema = z.object({
 
 export const CustomerAppointmentSchema = z.object({
   id: z.uuid(),
-  startAt: z.iso.datetime({ offset: true }),
-  endAt: z.iso.datetime({ offset: true }),
+  startAt: z.iso.datetime({ local: true }),
+  endAt: z.iso.datetime({ local: true }),
   status: z.enum(["scheduled", "cancelled", "completed", "no_show"]),
 });
 

@@ -6,6 +6,8 @@ export interface CompanyRecord {
   name: string;
   timezone: string;
   metadata: Record<string, unknown> | null;
+  address: string | null;
+  hoursOfOperation: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -16,6 +18,8 @@ function mapRow(row: Record<string, unknown>): CompanyRecord {
     name: String(row.name),
     timezone: String(row.timezone),
     metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+    address: row.address != null ? String(row.address) : null,
+    hoursOfOperation: (row.hours_of_operation as Record<string, unknown> | null) ?? null,
     createdAt: new Date(String(row.created_at)).toISOString(),
     updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
@@ -23,17 +27,17 @@ function mapRow(row: Record<string, unknown>): CompanyRecord {
 
 export async function insertCompany(input: CreateCompanyBody): Promise<CompanyRecord> {
   const result = await pool.query(
-    `insert into public.companies (name, timezone, metadata)
-     values ($1, $2, $3)
-     returning id, name, timezone, metadata, created_at, updated_at`,
-    [input.name, input.timezone, input.metadata ?? null],
+    `insert into public.companies (name, timezone, metadata, address, hours_of_operation)
+     values ($1, $2, $3, $4, $5)
+     returning id, name, timezone, metadata, address, hours_of_operation, created_at, updated_at`,
+    [input.name, input.timezone, input.metadata ?? null, input.address ?? null, input.hoursOfOperation ?? null],
   );
   return mapRow(result.rows[0]!);
 }
 
 export async function findCompanyById(companyId: string): Promise<CompanyRecord | null> {
   const result = await pool.query(
-    `select id, name, timezone, metadata, created_at, updated_at
+    `select id, name, timezone, metadata, address, hours_of_operation, created_at, updated_at
      from public.companies
      where id = $1`,
     [companyId],

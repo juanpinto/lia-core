@@ -1,4 +1,5 @@
 import type { PoolClient } from "pg";
+import { DateTime } from "luxon";
 import { pool, withTransaction } from "../../db/index.js";
 import { NotFoundError } from "../../lib/errors.js";
 import type {
@@ -64,8 +65,8 @@ function mapUpcomingContextRow(
   return {
     id: String(row.id),
     status: String(row.status),
-    startAt: new Date(String(row.start_at)).toISOString(),
-    endAt: new Date(String(row.end_at)).toISOString(),
+    startAt: DateTime.fromJSDate(row.start_at as Date).toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+    endAt: DateTime.fromJSDate(row.end_at as Date).toFormat("yyyy-MM-dd'T'HH:mm:ss"),
     notes: (row.notes as string | null) ?? null,
   };
 }
@@ -79,8 +80,8 @@ function mapAppointment(
     companyId: String(row.company_id),
     companyCustomerId: String(row.company_customer_id),
     conversationId: (row.conversation_id as string | null) ?? null,
-    startAt: new Date(String(row.start_at)).toISOString(),
-    endAt: new Date(String(row.end_at)).toISOString(),
+    startAt: DateTime.fromJSDate(row.start_at as Date).toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+    endAt: DateTime.fromJSDate(row.end_at as Date).toFormat("yyyy-MM-dd'T'HH:mm:ss"),
     status: row.status as AppointmentRecord["status"],
     createdVia: row.created_via as AppointmentRecord["createdVia"],
     notes: (row.notes as string | null) ?? null,
