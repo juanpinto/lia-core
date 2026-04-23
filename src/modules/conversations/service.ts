@@ -43,6 +43,9 @@ export interface ConversationContextForBrain {
     id: string;
     name: string;
     timezone: string;
+    description: string | null;
+    address: string | null;
+    hoursOfOperation: Record<string, unknown> | null;
     platformAccountId: string;
   };
   customer: {
@@ -206,6 +209,9 @@ async function getConversationContext(
       id: base.companyId,
       name: base.companyName,
       timezone: base.companyTimezone,
+      description: base.companyDescription,
+      address: base.companyAddress,
+      hoursOfOperation: base.companyHoursOfOperation,
       platformAccountId: base.companyPlatformAccountId ?? "",
     },
     customer: {

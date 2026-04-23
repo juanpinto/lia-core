@@ -25,6 +25,9 @@ export interface ConversationContextBaseRecord {
   companyCustomerId: string;
   companyName: string;
   companyTimezone: string;
+  companyDescription: string | null;
+  companyAddress: string | null;
+  companyHoursOfOperation: Record<string, unknown> | null;
   companyPlatformAccountId: string | null;
   customerId: string;
   customerName: string | null;
@@ -103,6 +106,9 @@ export async function getConversationContextBase(
       c.updated_at,
       co.name as company_name,
       co.timezone as company_timezone,
+      co.description as company_description,
+      co.address as company_address,
+      co.hours_of_operation as company_hours_of_operation,
       ca.platform_account_id as company_platform_account_id,
       cu.id as customer_id,
       cu.name as customer_name,
@@ -135,6 +141,9 @@ export async function getConversationContextBase(
     companyCustomerId: String(row.company_customer_id),
     companyName: String(row.company_name),
     companyTimezone: String(row.company_timezone),
+    companyDescription: (row.company_description as string | null) ?? null,
+    companyAddress: (row.company_address as string | null) ?? null,
+    companyHoursOfOperation: (row.company_hours_of_operation as Record<string, unknown> | null) ?? null,
     companyPlatformAccountId:
       (row.company_platform_account_id as string | null) ?? null,
     customerId: String(row.customer_id),

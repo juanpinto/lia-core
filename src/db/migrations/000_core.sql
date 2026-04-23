@@ -12,6 +12,7 @@ create table if not exists public.companies (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   timezone text not null default 'America/New_York',
+  description text null,
   metadata jsonb null,
   address text null,
   hours_of_operation jsonb null,

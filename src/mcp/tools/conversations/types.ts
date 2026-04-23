@@ -20,6 +20,9 @@ export const ConversationContextOutputSchema = z.object({
       id: z.uuid(),
       name: z.string(),
       timezone: z.string(),
+      description: z.string().nullable(),
+      address: z.string().nullable(),
+      hoursOfOperation: z.record(z.string(), z.unknown()).nullable(),
       platformAccountId: z.string(),
     }),
     customer: z.object({

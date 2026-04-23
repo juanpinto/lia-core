@@ -5,6 +5,7 @@ export interface CompanyRecord {
   id: string;
   name: string;
   timezone: string;
+  description: string | null;
   metadata: Record<string, unknown> | null;
   address: string | null;
   hoursOfOperation: Record<string, unknown> | null;
@@ -17,6 +18,7 @@ function mapRow(row: Record<string, unknown>): CompanyRecord {
     id: String(row.id),
     name: String(row.name),
     timezone: String(row.timezone),
+    description: row.description != null ? String(row.description) : null,
     metadata: (row.metadata as Record<string, unknown> | null) ?? null,
     address: row.address != null ? String(row.address) : null,
     hoursOfOperation: (row.hours_of_operation as Record<string, unknown> | null) ?? null,
@@ -27,17 +29,17 @@ function mapRow(row: Record<string, unknown>): CompanyRecord {
 
 export async function insertCompany(input: CreateCompanyBody): Promise<CompanyRecord> {
   const result = await pool.query(
-    `insert into public.companies (name, timezone, metadata, address, hours_of_operation)
-     values ($1, $2, $3, $4, $5)
-     returning id, name, timezone, metadata, address, hours_of_operation, created_at, updated_at`,
-    [input.name, input.timezone, input.metadata ?? null, input.address ?? null, input.hoursOfOperation ?? null],
+    `insert into public.companies (name, timezone, description, metadata, address, hours_of_operation)
+     values ($1, $2, $3, $4, $5, $6)
+     returning id, name, timezone, description, metadata, address, hours_of_operation, created_at, updated_at`,
+    [input.name, input.timezone, input.description ?? null, input.metadata ?? null, input.address ?? null, input.hoursOfOperation ?? null],
   );
   return mapRow(result.rows[0]!);
 }
 
 export async function findCompanyById(companyId: string): Promise<CompanyRecord | null> {
   const result = await pool.query(
-    `select id, name, timezone, metadata, address, hours_of_operation, created_at, updated_at
+    `select id, name, timezone, description, metadata, address, hours_of_operation, created_at, updated_at
      from public.companies
      where id = $1`,
     [companyId],
